@@ -286,21 +286,10 @@ blockquote p {
   background: hsla(0, 0%, 53.3%, 0.1);
 }
 
-/* ===== 图片(不压缩,原始尺寸展开) ===== */
+/* ===== 图片(自适应页面宽度) ===== */
 img {
-  max-width: none;
-  width: auto;
+  max-width: 100%;
   height: auto;
-}
-
-/* 图片容器允许横向滚动,避免溢出 */
-.figure,
-figure {
-  overflow-x: auto;
-}
-
-.quarto-figure {
-  overflow-x: auto;
 }
 
 /* ===== 提示框(模拟 docsify p.tip) ===== */

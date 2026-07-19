@@ -56,9 +56,7 @@ format:
       - cosmo
       - theme.scss
     css: theme.css
-    toc: true
-    toc-location: left
-    toc-depth: 3
+    toc: false
     number-sections: true
     number-depth: 3
     code-fold: false
