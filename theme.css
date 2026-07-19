@@ -122,6 +122,12 @@ main.content {
   background-color: #fff;
 }
 
+/* 覆盖 Quarto docked sidebar 的 grid 布局,让内容填满右侧空间 */
+body.docked .page-columns {
+  grid-template-columns:
+    [screen-start] 0 [screen-start-inset page-start page-start-inset body-start-outset body-start body-content-start] 1fr [body-content-end body-end body-end-outset page-end-inset page-end screen-end-inset screen-end] 0 !important;
+}
+
 /* 内容区填满侧边栏右侧空间 */
 #quarto-content .content {
   max-width: 100%;
@@ -286,10 +292,22 @@ blockquote p {
   background: hsla(0, 0%, 53.3%, 0.1);
 }
 
-/* ===== 图片(自适应页面宽度) ===== */
+/* ===== 图片(自适应,限制最大宽度避免过大) ===== */
 img {
   max-width: 100%;
   height: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 图表图片限制最大宽度 */
+.quarto-figure img,
+.figure img,
+img.figure-img {
+  max-width: 800px;
+  width: 100%;
+  object-fit: contain;
 }
 
 /* ===== 提示框(模拟 docsify p.tip) ===== */
