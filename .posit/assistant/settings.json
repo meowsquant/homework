@@ -1,0 +1,9 @@
+{
+  "permission": {
+    "bash": {
+      "/Users/sissiyang/.local/share/uv/python/cpython-3.14-macos-aarch64-none/bin/python *": "allow",
+      ".venv/bin/python *": "allow",
+      "tail *": "allow"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+.Rhistory
+.DS_Store
+.venv/
+__pycache__/
+*.quarto_ipynb*
+quarto_ipynb*
+
+/.quarto/
+**/*.quarto_ipynb

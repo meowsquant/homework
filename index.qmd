@@ -1,0 +1,26 @@
+---
+title: "量化交易入门 — 作业"
+---
+
+# 量化交易入门 — 作业
+
+本网站为「量化交易入门」课程的作业展示,使用 Python + Quarto 构建,涵盖数据模拟、行情获取、趋势识别与均线策略回测等内容。
+
+## 作业列表
+
+| 章节 | 主题 | 说明 |
+| --- | --- | --- |
+| [Task 1](task1.html) | 模拟数据涨跌盘 | 模拟三段行情(涨 → 跌 → 恢复),对比 MA20 量化策略、随机买卖与买入持有三种策略的净值曲线 |
+| [Task 2](task2.html) | 股票数据获取 | 使用 akshare 获取美股日线数据,封装 `get_stock_data` 函数并演示数据加载流程 |
+| [Task 3](task3.html) | 趋势模拟与识别 | 模拟上涨、下跌、横盘三种市场状态,直观展示趋势与噪声的区别 |
+| [Task 4](task4.html) | 双均线策略回测 | 基于 AAPL 的 MA 双均线策略回测,与 SPY 基准对比收益表现 |
+
+## 运行环境
+
+- Python 3.x
+- Quarto(用于渲染 `.qmd` 文档)
+- 主要依赖:`numpy`、`pandas`、`matplotlib`、`akshare`
+
+## 源代码
+
+完整源代码托管于 [GitHub](https://github.com/meowsquant/homework)。

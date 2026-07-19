@@ -1,0 +1,37 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - task1.qmd
+    - task2.qmd
+    - task3.qmd
+    - task4.qmd
+    - index.qmd
+  resources:
+    - "*.png"
+    - "*.jpg"
+
+execute:
+  freeze: auto
+  cache: true
+
+website:
+  title: "量化交易入门 — 作业"
+  page-navigation: true
+  navbar:
+    background: primary
+    left:
+      - text: "Task 1 — 模拟数据涨跌盘"
+        href: task1.html
+      - text: "Task 2 — 股票数据获取"
+        href: task2.html
+      - text: "Task 3 — 趋势模拟与识别"
+        href: task3.html
+      - text: "Task 4 — 双均线策略回测"
+        href: task4.html
+    right:
+      - icon: github
+        href: https://github.com/meowsquant/homework
+        aria-label: GitHub
+
+lang: zh
