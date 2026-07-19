@@ -12,17 +12,43 @@ body {
 }
 
 /* ===== 标题 ===== */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: #2c3e50;
   font-weight: 600;
 }
 
-h1 { font-size: 2rem; margin: 0 0 1rem; }
-h2 { font-size: 1.75rem; margin: 45px 0 0.8rem; }
-h3 { font-size: 1.5rem; margin: 40px 0 0.6rem; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1rem; }
-h6 { color: #777; font-size: 1rem; }
+h1 {
+  font-size: 2rem;
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-size: 1.75rem;
+  margin: 45px 0 0.8rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin: 40px 0 0.6rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+}
+
+h5 {
+  font-size: 1rem;
+}
+
+h6 {
+  color: #777;
+  font-size: 1rem;
+}
 
 /* ===== 链接 ===== */
 a {
@@ -31,6 +57,7 @@ a {
   text-decoration: none;
   transition: color 0.3s;
 }
+
 a:hover {
   color: #369870;
   text-decoration: underline;
@@ -144,7 +171,8 @@ th {
   font-weight: 700;
 }
 
-td, th {
+td,
+th {
   border: 1px solid #ddd;
   padding: 6px 13px;
 }
@@ -223,9 +251,21 @@ blockquote p {
 }
 
 @keyframes octocat-wave {
-  0%, 100% { transform: rotate(0); }
-  20%, 60% { transform: rotate(-25deg); }
-  40%, 80% { transform: rotate(10deg); }
+
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  20%,
+  60% {
+    transform: rotate(-25deg);
+  }
+
+  40%,
+  80% {
+    transform: rotate(10deg);
+  }
 }
 
 /* ===== 滚动条 ===== */
@@ -246,9 +286,21 @@ blockquote p {
   background: hsla(0, 0%, 53.3%, 0.1);
 }
 
-/* ===== 图片 ===== */
+/* ===== 图片(不压缩,原始尺寸展开) ===== */
 img {
-  max-width: 100%;
+  max-width: none;
+  width: auto;
+  height: auto;
+}
+
+/* 图片容器允许横向滚动,避免溢出 */
+.figure,
+figure {
+  overflow-x: auto;
+}
+
+.quarto-figure {
+  overflow-x: auto;
 }
 
 /* ===== 提示框(模拟 docsify p.tip) ===== */

@@ -57,13 +57,19 @@ format:
       - theme.scss
     css: theme.css
     toc: true
+    toc-location: left
     toc-depth: 3
+    number-sections: true
+    number-depth: 3
     code-fold: false
     code-copy: true
     highlight-style: tango
     mainfont: "Source Sans Pro"
     monofont: "Roboto Mono"
     lang: zh
+    fig-dpi: 300
+    fig-width: 12
+    fig-height: 6
     include-in-header:
       text: |
         <a href="https://github.com/meowsquant/homework" target="_blank" class="github-corner" aria-label="View source on GitHub">
