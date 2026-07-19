@@ -122,11 +122,11 @@ main.content {
   background-color: #fff;
 }
 
-/* 模拟 docsify 的 markdown-section 最大宽度 */
+/* 内容区填满侧边栏右侧空间 */
 #quarto-content .content {
-  max-width: 80%;
-  margin: 0 auto;
-  padding: 30px 15px 40px;
+  max-width: 100%;
+  margin: 0;
+  padding: 30px 40px 40px;
 }
 
 /* ===== 代码块 ===== */
