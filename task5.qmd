@@ -1,0 +1,92 @@
+---
+title: "Task 5 — 多策略对比"
+---
+
+
+```{python}
+# ========== 环境准备 ==========
+import warnings
+warnings.filterwarnings('ignore')
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import akshare as ak
+
+plt.rcParams['font.sans-serif'] = [              # 跨平台中文字体回退
+    'PingFang SC', 'Microsoft YaHei', 'SimHei',
+    'Noto Sans CJK SC', 'WenQuanYi Micro Hei', 'DejaVu Sans',
+]
+plt.rcParams['axes.unicode_minus'] = False
+
+TRADING_DAYS = 252   # 美股一年大约 252 个交易日
+
+
+def get_close(data, ticker=None):
+    """兼容 yfinance 单标的 / 多标的返回格式"""
+    close = data['Close']
+    if isinstance(close, pd.DataFrame):
+        return close[ticker] if ticker else close.squeeze()
+    return close
+
+print('环境就绪 ✓')
+```
+
+
+```{python}
+# ========== 5.1 两种路径，同一终点 ==========
+days = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5']
+x = np.arange(len(days))
+stock_a = [100, 105, 110, 115, 120]
+stock_b = [100, 80, 130, 70, 120]
+
+path_table = pd.DataFrame({'股票A': stock_a, '股票B': stock_b}, index=days)
+print('价格路径对照：')
+display(path_table)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(x, stock_a, 'o-', color='#007AFF', linewidth=2.5, markersize=9, label='股票 A · 平稳上涨')
+ax.plot(x, stock_b, 's-', color='#E82127', linewidth=2.5, markersize=9, label='股票 B · 大起大落')
+ax.axhline(120, color='gray', linestyle='--', alpha=0.5, label='终点都是 120')
+ax.set_xticks(x)
+ax.set_xticklabels(days)
+ax.set_ylabel('价格')
+ax.set_title('收益相同，路径不同：你更愿意持有哪一只？', fontsize=14)
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+ret_a = stock_a[-1] / stock_a[0] - 1
+ret_b = stock_b[-1] / stock_b[0] - 1
+print(f'股票 A 总涨幅: {ret_a:.0%}')
+print(f'股票 B 总涨幅: {ret_b:.0%}')
+```
+
+
+```{python}
+# ========== 5.2 电梯 vs 过山车 ==========
+fig, axes = plt.subplots(1, 2, figsize=(12, 4.8), sharey=True)
+
+axes[0].plot(x, stock_a, 'o-', color='#007AFF', linewidth=2.5, markersize=8)
+axes[0].set_title('股票 A · 像坐电梯\n上涨平稳', fontsize=12)
+axes[0].set_xticks(x)
+axes[0].set_xticklabels(days, fontsize=9)
+axes[0].grid(True, alpha=0.3)
+
+axes[1].plot(x, stock_b, 's-', color='#E82127', linewidth=2.5, markersize=8)
+peak = np.maximum.accumulate(stock_b)
+axes[1].fill_between(x, stock_b, peak, alpha=0.35, color='#E82127', label='从高点回落')
+axes[1].set_title('股票 B · 像坐过山车\n大起大落', fontsize=12)
+axes[1].set_xticks(x)
+axes[1].set_xticklabels(days, fontsize=9)
+axes[1].legend(fontsize=9)
+axes[1].grid(True, alpha=0.3)
+
+for ax in axes:
+    ax.set_ylabel('价格')
+
+fig.suptitle('市场中的「不稳定程度」不同', fontsize=14, y=1.02)
+plt.tight_layout()
+plt.show()
+```

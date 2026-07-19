@@ -1,6 +1,5 @@
 ---
-title: "task1 "
-format: html
+title: "Task 1 — 模拟数据涨跌盘"
 ---
 
 # 模拟数据涨跌盘

@@ -1,6 +1,5 @@
 ---
-title: "task 3"
-format: html
+title: "Task 3 — 趋势模拟与识别"
 ---
 
 

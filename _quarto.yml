@@ -6,6 +6,7 @@ project:
     - task2.qmd
     - task3.qmd
     - task4.qmd
+    - task5.qmd
     - index.qmd
   resources:
     - "*.png"
@@ -18,20 +19,66 @@ execute:
 website:
   title: "量化交易入门 — 作业"
   page-navigation: true
-  navbar:
-    background: primary
-    left:
-      - text: "Task 1 — 模拟数据涨跌盘"
-        href: task1.html
-      - text: "Task 2 — 股票数据获取"
-        href: task2.html
-      - text: "Task 3 — 趋势模拟与识别"
-        href: task3.html
-      - text: "Task 4 — 双均线策略回测"
-        href: task4.html
-    right:
-      - icon: github
-        href: https://github.com/meowsquant/homework
-        aria-label: GitHub
+  bread-crumbs: true
+  favicon: favicon.svg
 
-lang: zh
+  sidebar:
+    style: docked
+    background: light
+    width: 300px
+    collapse-level: 1
+    border: true
+    align: left
+    contents:
+      - section: "量化交易入门 — 作业"
+        href: index.html
+        contents:
+          - text: "Task 1 — 模拟数据涨跌盘"
+            href: task1.html
+          - text: "Task 2 — 股票数据获取"
+            href: task2.html
+          - text: "Task 3 — 趋势模拟与识别"
+            href: task3.html
+          - text: "Task 4 — 双均线策略回测"
+            href: task4.html
+          - text: "Task 5 — 多策略对比"
+            href: task5.html
+
+  page-footer:
+    left: |
+      <a href="https://github.com/meowsquant/homework" target="_blank">GitHub</a> · 量化交易入门作业
+    right: |
+      Built with [Quarto](https://quarto.org)
+
+format:
+  html:
+    theme:
+      - cosmo
+      - theme.scss
+    css: theme.css
+    toc: true
+    toc-depth: 3
+    code-fold: false
+    code-copy: true
+    highlight-style: tango
+    mainfont: "Source Sans Pro"
+    monofont: "Roboto Mono"
+    lang: zh
+    include-in-header:
+      text: |
+        <a href="https://github.com/meowsquant/homework" target="_blank" class="github-corner" aria-label="View source on GitHub">
+          <svg viewBox="0 0 250 250" aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path d="M149.7,140.4c-6.8,0-12.4,5.6-12.4,12.4c0,5.5,3.6,10.2,8.6,11.8c0.6,0.1,0.8-0.3,0.8-0.6c0-0.3,0-1.1,0-2.1c-3.5,0.8-4.2-1.5-4.2-1.5c-0.6-1.4-1.4-1.8-1.4-1.8c-1.1-0.8,0.1-0.8,0.1-0.8c1.2,0.1,1.9,1.3,1.9,1.3c1.1,1.9,2.9,1.4,3.6,1c0.1-0.8,0.4-1.4,0.8-1.7c-2.8-0.3-5.8-1.4-5.8-6.3c0-1.4,0.5-2.5,1.3-3.4c-0.1-0.3-0.6-1.6,0.1-3.3c0,0,1.1-0.3,3.5,1.3c1-0.3,2.1-0.4,3.2-0.4c1.1,0,2.2,0.1,3.2,0.4c2.4-1.6,3.5-1.3,3.5-1.3c0.7,1.7,0.3,3,0.1,3.3c0.8,0.9,1.3,2,1.3,3.4c0,4.9-3,6-5.8,6.3c0.4,0.4,0.8,1.1,0.8,2.2c0,1.6,0,2.9,0,3.3c0,0.3,0.2,0.7,0.8,0.6c4.9-1.7,8.5-6.3,8.5-11.8C162.1,146,156.5,140.4,149.7,140.4z" class="octo-arm"></path>
+          </svg>
+        </a>
+        <style>
+          .github-corner svg {
+            fill: #42b983;
+            color: #fff;
+            position: absolute;
+            top: 0;
+            border: 0;
+            right: 0;
+          }
+        </style>

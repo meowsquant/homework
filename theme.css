@@ -1,0 +1,279 @@
+/* docsify Vue 风格自定义 CSS */
+
+/* ===== 全局字体 ===== */
+body {
+  font-family: "Source Sans Pro", "Helvetica Neue", Arial, sans-serif;
+  color: #34495e;
+  background-color: #fff;
+  font-size: 15px;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== 标题 ===== */
+h1, h2, h3, h4, h5, h6 {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+h1 { font-size: 2rem; margin: 0 0 1rem; }
+h2 { font-size: 1.75rem; margin: 45px 0 0.8rem; }
+h3 { font-size: 1.5rem; margin: 40px 0 0.6rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1rem; }
+h6 { color: #777; font-size: 1rem; }
+
+/* ===== 链接 ===== */
+a {
+  color: #42b983;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+a:hover {
+  color: #369870;
+  text-decoration: underline;
+}
+
+/* ===== 顶部进度条(模拟 docsify) ===== */
+.progress-bar {
+  background-color: #42b983;
+  height: 2px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999999;
+  transition: width 0.2s, opacity 0.4s;
+}
+
+/* ===== 侧边栏 ===== */
+#quarto-sidebar {
+  background-color: #fff !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.07);
+  color: #364149;
+  font-size: 14px;
+}
+
+#quarto-sidebar .sidebar-title {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: 300;
+  text-align: center;
+  margin: 0 auto 1rem;
+}
+
+#quarto-sidebar .sidebar-item {
+  margin: 6px 0;
+}
+
+#quarto-sidebar .sidebar-link {
+  color: #505d6b !important;
+  font-size: 14px;
+  font-weight: 400;
+  text-decoration: none;
+  border-bottom: none;
+  display: block;
+}
+
+#quarto-sidebar .sidebar-link:hover {
+  text-decoration: underline;
+}
+
+#quarto-sidebar .sidebar-link.active {
+  border-right: 2px solid #42b983;
+  color: #42b983 !important;
+  font-weight: 600;
+}
+
+/* ===== 内容区 ===== */
+#quarto-content {
+  padding-top: 60px;
+}
+
+main.content {
+  background-color: #fff;
+}
+
+/* 模拟 docsify 的 markdown-section 最大宽度 */
+#quarto-content .content {
+  max-width: 80%;
+  margin: 0 auto;
+  padding: 30px 15px 40px;
+}
+
+/* ===== 代码块 ===== */
+code {
+  font-family: "Roboto Mono", Monaco, "Courier New", monospace;
+  background-color: #f8f8f8;
+  color: #e96900;
+  border-radius: 2px;
+  padding: 3px 5px;
+  margin: 0 2px;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border-radius: 2px;
+  padding: 0 1.4rem;
+  line-height: 1.5rem;
+  overflow: auto;
+}
+
+pre code {
+  color: #525252;
+  font-size: 0.8rem;
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+/* ===== 表格 ===== */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  display: block;
+  margin-bottom: 1rem;
+  overflow: auto;
+  width: 100%;
+}
+
+th {
+  font-weight: 700;
+}
+
+td, th {
+  border: 1px solid #ddd;
+  padding: 6px 13px;
+}
+
+tr {
+  border-top: 1px solid #ccc;
+}
+
+tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* ===== 引用块 ===== */
+blockquote {
+  border-left: 4px solid #42b983;
+  color: #858585;
+  margin: 2em 0;
+  padding-left: 20px;
+}
+
+blockquote p {
+  font-weight: 600;
+  margin-left: 0;
+}
+
+/* ===== 导航栏 ===== */
+.navbar {
+  background-color: #fff !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.navbar-brand {
+  color: #2c3e50 !important;
+  font-weight: 300;
+  font-size: 1.5rem;
+}
+
+.navbar-brand:hover {
+  color: #42b983 !important;
+}
+
+.navbar-nav .nav-link {
+  color: #34495e !important;
+  font-size: 16px;
+  transition: color 0.3s;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #42b983 !important;
+}
+
+.navbar-nav .nav-link.active {
+  color: #42b983 !important;
+  border-bottom: 2px solid #42b983;
+}
+
+/* ===== GitHub 角标(模拟 docsify 的 github-corner) ===== */
+.github-corner {
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  border-bottom: 0;
+  text-decoration: none;
+}
+
+.github-corner svg {
+  color: #fff;
+  fill: #42b983;
+  height: 80px;
+  width: 80px;
+}
+
+.github-corner:hover .octo-arm {
+  animation: octocat-wave 0.56s ease-in-out;
+}
+
+@keyframes octocat-wave {
+  0%, 100% { transform: rotate(0); }
+  20%, 60% { transform: rotate(-25deg); }
+  40%, 80% { transform: rotate(10deg); }
+}
+
+/* ===== 滚动条 ===== */
+#quarto-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+#quarto-sidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+
+#quarto-sidebar:hover::-webkit-scrollbar-thumb {
+  background: hsla(0, 0%, 53.3%, 0.4);
+}
+
+#quarto-sidebar:hover::-webkit-scrollbar-track {
+  background: hsla(0, 0%, 53.3%, 0.1);
+}
+
+/* ===== 图片 ===== */
+img {
+  max-width: 100%;
+}
+
+/* ===== 提示框(模拟 docsify p.tip) ===== */
+.tip {
+  background-color: #f8f8f8;
+  border-bottom-right-radius: 2px;
+  border-left: 4px solid #f66;
+  border-top-right-radius: 2px;
+  margin: 2em 0;
+  padding: 12px 24px 12px 30px;
+  position: relative;
+}
+
+/* ===== 警告框(模拟 docsify p.warn) ===== */
+.warn {
+  background: rgba(66, 185, 131, 0.1);
+  border-radius: 2px;
+  padding: 1rem;
+}
+
+/* ===== 响应式 ===== */
+@media screen and (max-width: 768px) {
+  #quarto-sidebar {
+    position: fixed;
+    left: -300px;
+    transition: transform 0.25s ease-out;
+  }
+}

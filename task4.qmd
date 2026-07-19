@@ -1,6 +1,5 @@
 ---
-title: "task 4"
-format: html
+title: "Task 4 — 双均线策略回测"
 ---
 # 环境配置
 

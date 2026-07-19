@@ -1,6 +1,5 @@
 ---
-title: "task 2"
-format: html
+title: "Task 2 — 股票数据获取"
 ---
 
 # 环境准备

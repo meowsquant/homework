@@ -4,6 +4,9 @@
 __pycache__/
 *.quarto_ipynb*
 quarto_ipynb*
+_site/
+.jupyter_cache/
+.posit/
 
 /.quarto/
 **/*.quarto_ipynb
