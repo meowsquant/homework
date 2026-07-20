@@ -21,7 +21,8 @@
     "edit": {
       "*.scss": "allow",
       "*.yml": "allow",
-      "*.css": "allow"
+      "*.css": "allow",
+      "*.qmd": "allow"
     },
     "executeCode": {
       "*": "allow"
