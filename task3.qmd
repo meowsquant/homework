@@ -349,9 +349,6 @@ print(f"{STOCK_NAME} ({SYMBOL}) 样本内共 {len(df)} 个交易日")
 print(f"金叉 {len(golden)} 次，死叉 {len(death)} 次")
 print(f"持仓天数：{df['signal'].sum()} / {len(df)}")
 display(df.tail(8))
-print(f"金叉 {len(golden)} 次，死叉 {len(death)} 次")
-print(f"持仓天数：{df['signal'].sum()} / {len(df)}")
-display(df.tail(8))
 ```
 
 

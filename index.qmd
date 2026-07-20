@@ -19,7 +19,7 @@ title: "量化交易入门 — 作业"
 
 - Python 3.x
 - Quarto(用于渲染 `.qmd` 文档)
-- 主要依赖:`numpy`、`pandas`、`matplotlib`、`akshare`、`yfinance`
+- 主要依赖:`numpy`、`pandas`、`matplotlib`、`akshare`
 
 ## 源代码
 

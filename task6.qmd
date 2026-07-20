@@ -260,7 +260,7 @@ print('Beta 相对 SPY（β>1 比大盘更冲，β<1 更稳）：')
 display(beta_df.map('{:.2f}'.format))              # 保留两位小数展示
 ```
 
-#描述性统计
+# 描述性统计
 
 ```{python}
 # ========== statistics 标准库：AAPL 日收益分布快照 ==========
@@ -313,7 +313,7 @@ closer = 'JPM' if abs(jpm_beta - 1.0) < abs(nvda_beta - 1.0) else 'NVDA'
 closer_beta = jpm_beta if closer == 'JPM' else nvda_beta
 
 print(f'\n{closer} 更接近大盘（Beta = {closer_beta:.2f}）。')
-print(f'大盘涨 1% 时，{closer} 平均涨 {closer_beta:.1%}。')
+print(f'大盘涨 1% 时，{closer} 平均涨 {closer_beta:.2f}%。')
 ```
 
 ## Sharpe 高是否意味着未来一定更好？

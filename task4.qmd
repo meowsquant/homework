@@ -93,7 +93,7 @@ plt.show()                               # 在 Notebook 里显示图片
 print('Green area = holding (after buy, before sell) | Blank = cash')  # 解读三色区域含义
 ```
 
-#策略收益率
+# 策略收益率
 如果股票 **昨天 100 元，今天 110 元** —— 我们到底赚了多少？
 
 答案是：**日收益率约 +10%**（用 `pct_change()` 算）。
@@ -391,7 +391,7 @@ def backtest_ma_cross(
 
 # ========== 单只股票回测示例 ==========
 df, metrics = backtest_ma_cross("NVDA", period="2y")
-print("--- AAPL 回测指标 ---")
+print("--- NVDA 回测指标 ---")
 for k, v in metrics.items():
     if isinstance(v, float):
         print(f"{k}: {v:.2%}" if abs(v) < 5 else f"{k}: {v:.2f}")
@@ -404,7 +404,7 @@ ax.plot(df.index, df["nav_strategy"], label="Strategy", linewidth=2)
 ax.plot(df.index, df["nav_buyhold"], label="Buy&Hold", linewidth=1.6)
 ax.plot(df.index, df["nav_market"], label="Market (SPY)", linestyle="--", linewidth=1.6)
 ax.axhline(1, color="black", linestyle=":", alpha=0.5)
-ax.set_title(f"AAPL Backtest (MA{SHORT_WIN}/{LONG_WIN})")
+ax.set_title(f"NVDA Backtest (MA{SHORT_WIN}/{LONG_WIN})")
 ax.set_ylabel("NAV (Start=1)")
 ax.legend()
 ax.grid(True, alpha=0.3)
@@ -413,7 +413,7 @@ plt.show()
 
 ```
 
-#5y和1y回撤对比
+# 5y和1y回撤对比
 
 ```{python}
 # ========== 可视化对比：PERIOD='1y' vs '5y' ==========
@@ -481,7 +481,7 @@ for col in df_compare.columns:
 print(df_compare)
 ```
 
-#多只股票一起回测
+# 多只股票一起回测
 
 ```{python}
 # ========== 多只股票批量回测 ==========

@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import akshare as ak
-import yfinance as yf
 
 plt.rcParams['font.sans-serif'] = [              # 跨平台中文字体回退
     'PingFang SC', 'Microsoft YaHei', 'SimHei',

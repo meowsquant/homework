@@ -200,7 +200,7 @@ print("  → Volatility grows with the square root of time (right) – Regnault'
 print("=" * 60)
 ```
 
-## 实验二：模拟布朗运动
+## 实验二：索普——概率优势与凯利仓位
 
 ```{python}
 # ========== 实验二：索普——概率优势 + 凯利仓位 ==========
