@@ -44,7 +44,7 @@ path_table = pd.DataFrame({'股票A': stock_a, '股票B': stock_b}, index=days)
 print('价格路径对照：')
 display(path_table)
 
-fig, ax = plt.subplots(figsize=(10, 5))
+fig, ax = plt.subplots(figsize=(8, 4))
 ax.plot(x, stock_a, 'o-', color='#007AFF', linewidth=2.5, markersize=9, label='股票 A · 平稳上涨')
 ax.plot(x, stock_b, 's-', color='#E82127', linewidth=2.5, markersize=9, label='股票 B · 大起大落')
 ax.axhline(120, color='gray', linestyle='--', alpha=0.5, label='终点都是 120')
@@ -66,7 +66,7 @@ print(f'股票 B 总涨幅: {ret_b:.0%}')
 
 ```{python}
 # ========== 5.2 电梯 vs 过山车 ==========
-fig, axes = plt.subplots(1, 2, figsize=(12, 4.8), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(9, 4), sharey=True)
 
 axes[0].plot(x, stock_a, 'o-', color='#007AFF', linewidth=2.5, markersize=8)
 axes[0].set_title('股票 A · 像坐电梯\n上涨平稳', fontsize=12)

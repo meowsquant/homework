@@ -68,7 +68,7 @@ display(trades[['Close', 'MA5', 'MA20', 'position', 'action']].tail(6))  # 在 N
 
 
 ```{python}
-fig, axes = plt.subplots(2, 1, figsize=(14, 7), sharex=True,  # 创建子图
+fig, axes = plt.subplots(2, 1, figsize=(9, 6), sharex=True,  # 创建子图
                          gridspec_kw={'height_ratios': [2.5, 1]})  # 子图高度比例
 
 axes[0].plot(df.index, df['Close'], color='gray', linewidth=1, label='Close Price')  # 上图：画折线
@@ -161,7 +161,7 @@ print(f'  Buy & Hold ({BENCHMARK} market): {total_market:+.2%}')  # 格式化打
 
 ```{python}
 # ========== 三条净值曲线对比（回测高潮图）==========
-fig, ax = plt.subplots(figsize=(14, 6))  # 创建子图
+fig, ax = plt.subplots(figsize=(9, 5))  # 创建子图
 
 ax.plot(df.index, df['nav_strategy'], linewidth=2.2, color='tab:purple',  # 在子图上画折线
         label=f'Dual MA Strategy ({TICKER})')  # 图例文字
@@ -187,7 +187,7 @@ plt.show()                               # 在 Notebook 里显示图片
 cutoff = df.index[-1] - pd.DateOffset(months=12)
 recent = df[df.index >= cutoff] if len(df) > 200 else df.tail(200)  # 取最后约12个月
 
-plt.figure(figsize=(14, 5))  # 创建画布
+plt.figure(figsize=(9, 4))  # 创建画布
 plt.plot(recent.index, recent['nav_strategy'], linewidth=2, label='Dual MA Strategy')  # 画折线图
 plt.plot(recent.index, recent['nav_buyhold'], linewidth=1.6, label=f'Buy & Hold {TICKER}')  # 画折线图
 plt.plot(recent.index, recent['nav_market'], linewidth=1.6, linestyle='--', label=f'Buy & Hold {BENCHMARK}')  # 画折线图
@@ -260,7 +260,7 @@ print('=== Maximum Drawdown (deepest drop from peak during sample period) ===') 
 print(f'  Dual MA Strategy: {mdd_strategy:.2%}')  # 格式化打印
 print(f'  Buy & Hold ({TICKER}): {mdd_buyhold:.2%}')  # 格式化打印
 
-fig, ax = plt.subplots(figsize=(14, 5))  # 创建子图
+fig, ax = plt.subplots(figsize=(9, 4))  # 创建子图
 ax.fill_between(df.index, dd_strategy * 100, 0, alpha=0.35, color='tab:purple', label='Strategy Drawdown %')  # 在子图上填充区域
 ax.plot(df.index, dd_strategy * 100, color='tab:purple', linewidth=1)  # 在子图上画折线
 ax.set_title(f'Strategy Drawdown (Max DD = {mdd_strategy:.2%})', fontsize=14)  # 设置子图标题
@@ -399,7 +399,7 @@ for k, v in metrics.items():
         print(f"{k}: {v}")
 
 # 绘制净值曲线（可选）
-fig, ax = plt.subplots(figsize=(14, 5))
+fig, ax = plt.subplots(figsize=(9, 4))
 ax.plot(df.index, df["nav_strategy"], label="Strategy", linewidth=2)
 ax.plot(df.index, df["nav_buyhold"], label="Buy&Hold", linewidth=1.6)
 ax.plot(df.index, df["nav_market"], label="Market (SPY)", linestyle="--", linewidth=1.6)
@@ -432,7 +432,7 @@ for p in periods:
     metrics_dict[p] = met
 
 # ---------- 绘制对比图 ----------
-fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+fig, axes = plt.subplots(2, 2, figsize=(10, 7))
 fig.suptitle(
     f"{TICKER} Dual MA Strategy Comparison (MA{SHORT_WIN}/{LONG_WIN})", fontsize=16
 )
@@ -502,7 +502,7 @@ print("\n--- 多股票策略表现对比 ---")
 print(df_compare.round(4))
 
 # 绘制多股票净值曲线（同一画布）
-fig, ax = plt.subplots(figsize=(14, 6))
+fig, ax = plt.subplots(figsize=(9, 5))
 for t in tickers:
     df_t, _ = backtest_ma_cross(t, period="2y")  # 重新执行获取净值（或缓存）
     ax.plot(df_t.index, df_t["nav_strategy"], label=t, linewidth=1.5)

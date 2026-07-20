@@ -68,7 +68,7 @@ format:
     mainfont: "Source Sans Pro"
     monofont: "Roboto Mono"
     lang: zh
-    fig-dpi: 150
+    fig-dpi: 96
     fig-width: 8
     fig-height: 4
     include-in-header:
