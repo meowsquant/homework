@@ -118,7 +118,7 @@ TICKER = "AAPL"
 raw = ak.stock_us_daily(symbol=TICKER, adjust="qfq")
 raw["date"] = pd.to_datetime(raw["date"])
 raw = raw.set_index("date").sort_index()
-raw = raw[raw.index >= "2024-01-01"]  # 近一年数据
+raw = raw.tail(TRADING_DAYS)  # 近一年数据（252 个交易日）
 df = pd.DataFrame({"Close": raw["close"]})
 df["return"] = df["Close"].pct_change()
 df = df.dropna().copy()
@@ -183,13 +183,426 @@ desc["数值"] = desc["数值"].round(2)
 desc
 ```
 
-结果怎么读？
+结果的解读和判断。
 
 左图 回答：「这一年总体赚还是亏？」
-总体盈利为 82.53%。
+总体盈利为 59.71%。
 
 右图 回答：「大多数日子的涨跌，集中在哪个区间？」
-全年的日收益率从 -9.30% 到 +15.45%，跨度很大；但 636 个交易日中有 530 天（83.3%）落在 **-2% ~ +2%** 之间，即均值（0.11%）上下约 ±1 个标准差（1.75%）。换句话说，大多数日子只是小幅波动，真正大涨大跌的日子是少数。
+全年的日收益率从 -6.12% 到 +5.12%，跨度不小；但 251 个交易日中有 212 天（84.5%）落在 **-2% ~ +2%** 之间，即均值（0.20%）上下约 ±1 个标准差（1.54%）。换句话说，大多数日子只是小幅波动，真正大涨大跌的日子是少数。
 
-如果直方图 又宽又胖，说明大涨大跌的日子多 → 通常 波动更大。
-如果直方图 又窄又高，说明涨跌集中在均值附近 → 通常 更平稳。
+# 波动率
+波动率量化的是直方图上柱子的分散程度，是收益率的**标准差**。收益率越分散，波动率越高，越集中，波动率越低。
+
+公式：
+
+$$\sigma = \sqrt{\frac{1}{n-1}\sum_{i=1}^{n}(r_i - \bar{r})^2}$$
+
+**符号含义：**
+
+| 符号 | 含义 |
+|:---:|:---|
+| $\sigma$ | 标准差（我们用来近似 **日波动率**） |
+| $r_i$ | 第 $i$ 天的日收益率 |
+| $\bar{r}$ | 日收益率的平均值 |
+| $n$ | 样本天数 |
+
+
+```{python}
+# ========== 5.5 三票波动率 PK ==========
+TICKERS = ["AAPL", "TSLA", "NVDA"]
+NAMES = {"AAPL": "苹果", "TSLA": "特斯拉", "NVDA": "英伟达"}
+COLORS = ["#007AFF", "#E82127", "#76B900"]
+
+multi_close = pd.DataFrame()
+for t in TICKERS:
+    d = ak.stock_us_daily(symbol=t, adjust="qfq")
+    d["date"] = pd.to_datetime(d["date"])
+    d = d.set_index("date").sort_index()
+    multi_close[t] = d["close"].tail(TRADING_DAYS)
+
+multi_rets = multi_close.pct_change().dropna()
+
+records = []
+ann_vols = []
+for t in TICKERS:
+    r = multi_rets[t]
+    dvol = float(r.std())
+    avol = dvol * np.sqrt(TRADING_DAYS)
+    aret = float((1 + r.mean()) ** TRADING_DAYS - 1)
+    ann_vols.append(avol)
+    records.append(
+        {
+            "名称": NAMES[t],
+            "日波动率": f"{dvol:.2%}",
+            "年化波动率": f"{avol:.2%}",
+            "年化收益(约)": f"{aret:.2%}",
+        }
+    )
+
+vol_table = pd.DataFrame(records, index=TICKERS)
+print("波动率对比表：")
+display(vol_table)
+
+fig, ax = plt.subplots(figsize=(8, 5))
+bars = ax.bar(
+    [NAMES[t] for t in TICKERS],
+    [v * 100 for v in ann_vols],
+    color=COLORS,
+    edgecolor="white",
+    linewidth=1.2,
+)
+ax.set_ylabel("年化波动率 (%)")
+ax.set_title("谁最稳？谁最刺激？· 年化波动率柱状图", fontsize=14)
+ax.grid(True, axis="y", alpha=0.3)
+for bar, v in zip(bars, ann_vols):
+    ax.text(
+        bar.get_x() + bar.get_width() / 2,
+        bar.get_height() + 1,
+        f"{v:.1%}",
+        ha="center",
+        fontsize=11,
+    )
+plt.tight_layout()
+plt.show()
+
+rank = sorted(zip(TICKERS, ann_vols), key=lambda x: x[1])
+print(f"最稳: {NAMES[rank[0][0]]} ({rank[0][1]:.1%})")
+print(f"最刺激: {NAMES[rank[-1][0]]} ({rank[-1][1]:.1%})")
+```
+
+# 在同样受益下两位投资者的持有过程：如何更拿得住
+
+
+```{python}
+# ========== 5.6 同收益、不同波动：净值路径模拟 ==========
+rng = np.random.default_rng(42)
+n = TRADING_DAYS
+target_annual = 0.20
+daily_mu = (1 + target_annual) ** (1 / n) - 1   # 换算成「日均」目标收益
+
+vol_a, vol_b = 0.10, 0.60
+sigma_a = vol_a / np.sqrt(n)
+sigma_b = vol_b / np.sqrt(n)
+
+rets_a = rng.normal(daily_mu, sigma_a, n)
+rets_b = rng.normal(daily_mu, sigma_b, n)
+
+nav_a = np.cumprod(1 + rets_a)
+nav_b = np.cumprod(1 + rets_b)
+
+def max_drawdown(nav):
+    peak = np.maximum.accumulate(nav)
+    return float((nav / peak - 1).min())
+
+fig, axes = plt.subplots(2, 1, figsize=(11, 7), sharex=True,
+                         gridspec_kw={'height_ratios': [2, 1]})
+
+axes[0].plot(nav_a, color='#007AFF', linewidth=1.5, label=f'投资者 A · 波动率 {vol_a:.0%}')
+axes[0].plot(nav_b, color='#E82127', linewidth=1.5, label=f'投资者 B · 波动率 {vol_b:.0%}')
+axes[0].axhline(1.20, color='gray', linestyle='--', alpha=0.6, label='目标 +20% 参考线')
+axes[0].set_ylabel('净值（起点=1）')
+axes[0].set_title('同样追求 ~20% 收益：持有过程天差地别', fontsize=14)
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+dd_a = nav_a / np.maximum.accumulate(nav_a) - 1
+dd_b = nav_b / np.maximum.accumulate(nav_b) - 1
+axes[1].fill_between(range(n), dd_a, 0, alpha=0.4, color='#007AFF', label='A 回撤')
+axes[1].fill_between(range(n), dd_b, 0, alpha=0.4, color='#E82127', label='B 回撤')
+axes[1].set_ylabel('回撤')
+axes[1].set_xlabel('交易日')
+axes[1].legend(fontsize=9)
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+print(f"投资者 A  最终净值: {nav_a[-1]:.2f}  |  最大回撤: {max_drawdown(nav_a):.1%}")
+print(f"投资者 B  最终净值: {nav_b[-1]:.2f}  |  最大回撤: {max_drawdown(nav_b):.1%}")
+print('\n👉 想一想：B 的中途回撤，你会不会在某个低点「受不了」而卖出？')
+```
+
+
+# 小实验：你会选哪一个？
+
+规则：**未来 5 年不能卖出**。你只能选一只。
+
+| 选项 | 预期年收益 | 年化波动率 |
+|------|------------|------------|
+| **A** | 40% | 50% |
+| **B** | 20% | 10% |
+
+没有标准答案。
+
+- 选 A 的人，可能 **野心更大**，能承受剧烈波动
+- 选 B 的人，可能 **更重视睡眠**，宁可少赚也要稳
+
+量化研究员不会简单说「哪个对」，而是会先问：
+
+> **你的风险承受能力，配得上这个波动率吗？**
+
+下面散点图一共 **10 个点**（8 只真实股票 + 虚构 A/B），覆盖防御型到极端投机型（**不代表未来**）。
+
+
+```{python}
+# ========== 5.7 小实验：10 个点风险-收益散点 ==========
+EXP_TICKERS = ["KO", "JPM", "AAPL", "MSFT", "META", "NVDA", "TSLA", "COIN"]
+EXP_NAMES = {
+    "KO": "可口可乐",
+    "JPM": "摩根大通",
+    "AAPL": "苹果",
+    "MSFT": "微软",
+    "META": "Meta",
+    "NVDA": "英伟达",
+    "TSLA": "特斯拉",
+    "COIN": "Coinbase",
+}
+EXP_COLORS = [
+    "#8B4513",
+    "#003366",
+    "#007AFF",
+    "#00A4EF",
+    "#0668E1",
+    "#76B900",
+    "#E82127",
+    "#1652F0",
+]
+
+
+def annual_stats(series):
+    s = series.dropna()
+    return {
+        "ret": float((1 + s.mean()) ** TRADING_DAYS - 1),
+        "vol": float(s.std() * np.sqrt(TRADING_DAYS)),
+    }
+
+
+exp_close = pd.DataFrame()
+for t in EXP_TICKERS:
+    d = ak.stock_us_daily(symbol=t, adjust="qfq")
+    d["date"] = pd.to_datetime(d["date"])
+    d = d.set_index("date").sort_index()
+    exp_close[t] = d["close"].tail(TRADING_DAYS)
+
+exp_rets = exp_close.pct_change().dropna()
+
+fig, ax = plt.subplots(figsize=(10, 7))
+
+for t, c in zip(EXP_TICKERS, EXP_COLORS):
+    st = annual_stats(exp_rets[t])
+    ax.scatter(
+        st["vol"],
+        st["ret"],
+        s=130,
+        color=c,
+        edgecolors="white",
+        linewidth=1.2,
+        zorder=3,
+    )
+    ax.annotate(
+        EXP_NAMES[t],
+        (st["vol"], st["ret"]),
+        xytext=(6, 5),
+        textcoords="offset points",
+        fontsize=9,
+    )
+
+ax.scatter(
+    0.50,
+    0.40,
+    s=200,
+    facecolors="none",
+    edgecolors="#333",
+    linewidths=2,
+    linestyle="--",
+    label="选项 A · 40% / 50%",
+    zorder=2,
+)
+ax.scatter(
+    0.10,
+    0.20,
+    s=200,
+    facecolors="none",
+    edgecolors="#333",
+    linewidths=2,
+    linestyle="--",
+    label="选项 B · 20% / 10%",
+    zorder=2,
+)
+
+ax.set_xlabel("年化波动率 →  风险 / 持有体验")
+ax.set_ylabel("年化收益率 →  预期回报")
+ax.set_title("5 年不能卖：10 个点，你会选哪个？", fontsize=14)
+ax.legend(loc="upper left", fontsize=8, ncol=2)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+print("── 10 个点一览（近 1 年历史）──")
+rows = []
+for t in EXP_TICKERS:
+    st = annual_stats(exp_rets[t])
+    rows.append(
+        {
+            "名称": EXP_NAMES[t],
+            "年化收益": f"{st['ret']:.1%}",
+            "年化波动": f"{st['vol']:.1%}",
+        }
+    )
+rows.append({"名称": "选项 A（虚构）", "年化收益": "40.0%", "年化波动": "50.0%"})
+rows.append({"名称": "选项 B（虚构）", "年化收益": "20.0%", "年化波动": "10.0%"})
+display(pd.DataFrame(rows))
+```
+
+*结果怎么读？**
+
+- 横轴越靠右 = 波动越大 = 过程越「刺激」。
+- 纵轴越高 = 历史平均收益越高（**过去不代表未来**）。
+- 在下方代码格 **写下你的选择和 1～2 句理由**——这是本章最重要的「思考作业」。
+
+
+```{python}
+# ========== 写下你的选择 ==========
+my_choice = 'B'   # 改成 'A' 或 'B'
+my_reason = '其实这个问题较为片面，因为实际情况下，交易操作的是一个投资足者，那ok，假设必须做孤注一掷的选择，并且全仓进入市场的情况下，我会选择B，因为B选项中的股票至少保证回撤小，且突发事件少。认真观察给定的标的，为什么会有B这个选项，本质上这类企业都是长青企业，并不是科技新贵或者爆发式增长的独角兽，这类企业甚至有一些老登，但是因为公司盘子比较大，且企业为了股东利益等等因素，都会进行市值管理。其经营模式，商业模式都较为稳定。因此要选择未来五年这样长时间的选择，应该是尽量求稳，而不是赌博。我会选择A，当然如何可以用在A中规划，可口可乐可能会是一个不错的养老股票。'
+
+print(f'我的选择: {my_choice}')
+print(f'理由: {my_reason}')
+```
+
+# 挑战任务
+
+```{python}
+# ========== 5.8 挑战 Starter 代码 ==========
+# ── Lv.1：换一只股票 ──
+lv1_ticker = "BB"
+d = ak.stock_us_daily(symbol=lv1_ticker, adjust="qfq")
+d["date"] = pd.to_datetime(d["date"])
+d = d.set_index("date").sort_index()
+lv1_ret = d["close"].tail(TRADING_DAYS).pct_change().dropna()
+lv1_ann_vol = float(lv1_ret.std() * np.sqrt(TRADING_DAYS))
+print(f"[Lv.1] {lv1_ticker} 年化波动率: {lv1_ann_vol:.2%}")
+
+# ── Lv.2：加入 MSFT ──
+lv2_tickers = ["QQQ", "NOK", "SPY", "INTC", "AMD"]
+lv2_close = pd.DataFrame()
+for t in lv2_tickers:
+    d = ak.stock_us_daily(symbol=t, adjust="qfq")
+    d["date"] = pd.to_datetime(d["date"])
+    d = d.set_index("date").sort_index()
+    lv2_close[t] = d["close"].tail(TRADING_DAYS)
+lv2_rets = lv2_close.pct_change().dropna()
+lv2_vols = lv2_rets.std() * np.sqrt(TRADING_DAYS)
+print("\n[Lv.2] 年化波动率：")
+print(lv2_vols.sort_values(ascending=False).map(lambda x: f"{float(x):.2%}"))
+
+# ── Lv.3：收益率分布图（Lv.1 + Lv.2 所有股票，一张画布）──
+lv3_tickers = [lv1_ticker] + lv2_tickers
+lv3_colors = ["#E82127", "#007AFF", "#FF9500", "#34C759", "#5856D6", "#AF52DE"]
+
+fig, axes = plt.subplots(2, 3, figsize=(10, 6))
+axes_flat = axes.flatten()
+
+for i, t in enumerate(lv3_tickers):
+    if t == lv1_ticker:
+        rets = lv1_ret
+    else:
+        rets = lv2_rets[t]
+    axes_flat[i].hist(
+        rets * 100,
+        bins=30,
+        color=lv3_colors[i],
+        alpha=0.75,
+        edgecolor="white",
+    )
+    axes_flat[i].axvline(0, color="black", linestyle="--", linewidth=0.8)
+    axes_flat[i].set_title(f"{t} · 日收益率分布", fontsize=11)
+    axes_flat[i].set_xlabel("日收益率 (%)", fontsize=9)
+    axes_flat[i].set_ylabel("天数", fontsize=9)
+
+fig.suptitle("[Lv.3] Lv.1 + Lv.2 全部股票日收益率分布", fontsize=14, y=1.01)
+plt.tight_layout()
+plt.show()
+
+# ── Lv.4：近 1 年波动率最高的股票（全部画在一张图上对比）──
+candidates = ["SPY", "QQQ", "NOK", "BB", "AMD", "INTC", "RXT", "RKLB"]
+cand_close = pd.DataFrame()
+for t in candidates:
+    d = ak.stock_us_daily(symbol=t, adjust="qfq")
+    d["date"] = pd.to_datetime(d["date"])
+    d = d.set_index("date").sort_index()
+    cand_close[t] = d["close"].tail(TRADING_DAYS)
+cand_rets = cand_close.pct_change().dropna()
+cand_vols = cand_rets.std() * np.sqrt(TRADING_DAYS)
+cand_vols = cand_vols.sort_values(ascending=False)
+
+fig, ax = plt.subplots(figsize=(9, 6))
+cand_order = cand_vols.index.tolist()
+cand_palette = plt.cm.tab10(np.linspace(0, 1, len(cand_order)))
+
+# 计算每个点的坐标
+cand_pts = []
+for t in cand_order:
+    r = cand_rets[t]
+    avol = float(cand_vols[t]) * 100
+    aret = float((1 + r.mean()) ** TRADING_DAYS - 1) * 100
+    cand_pts.append((t, avol, aret))
+
+# 根据最近邻距离决定标签偏移方向，避免重叠
+offsets = {}
+for i, (t1, x1, y1) in enumerate(cand_pts):
+    for j, (t2, x2, y2) in enumerate(cand_pts):
+        if i == j:
+            continue
+        dist = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+        if dist < 25:
+            dx, dy = x1 - x2, y1 - y2
+            if abs(dx) >= abs(dy):
+                offsets[t1] = (14 if dx >= 0 else -14, 6)
+            else:
+                offsets[t1] = (6, 14 if dy >= 0 else -14)
+            break
+    if t1 not in offsets:
+        offsets[t1] = (8, 8)
+
+for i, (t, avol, aret) in enumerate(cand_pts):
+    ax.scatter(
+        avol,
+        aret,
+        s=120,
+        color=cand_palette[i],
+        edgecolors="white",
+        linewidth=1.2,
+        zorder=3,
+    )
+    ox, oy = offsets[t]
+    ha = "left" if ox > 0 else "right"
+    va = "bottom" if oy > 0 else "top"
+    ax.annotate(
+        f"{t} ({float(cand_vols[t]):.0%})",
+        (avol, aret),
+        xytext=(ox, oy),
+        textcoords="offset points",
+        fontsize=9,
+        fontweight="bold",
+        ha=ha,
+        va=va,
+        bbox=dict(boxstyle="round,pad=0.25", facecolor="white", alpha=0.85, edgecolor="none"),
+        zorder=4,
+    )
+
+ax.axhline(0, color="gray", linestyle="--", linewidth=0.8)
+ax.set_xlabel("年化波动率 (%) → 风险", fontsize=11)
+ax.set_ylabel("年化收益率 (%) → 回报", fontsize=11)
+ax.set_title("[Lv.4] 8 只候选股票 · 风险-收益散点图", fontsize=13)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+print("\n[Lv.4] 近 1 年年化波动率排名：")
+for t, v in cand_vols.items():
+    print(f"  {t}: {float(v):.2%}")
+print(f"\n🏆 波动率最高: {cand_vols.index[0]} ({float(cand_vols.iloc[0]):.2%})")
+```
+
