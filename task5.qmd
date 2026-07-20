@@ -150,6 +150,39 @@ print(f"样本: {len(df)} 个交易日")
 print(f"累计收益: {df['cum_return'].iloc[-1]:.2%}")
 ```
 
+```{python}
+# ========== 描述性统计表 ==========
+stats = df["return"] * 100  # 转成百分比，方便阅读
+
+desc = pd.DataFrame({
+    "指标": [
+        "样本天数",
+        "均值 (%)",
+        "标准差 (%)",
+        "最小值 (%)",
+        "25 分位数 (%)",
+        "中位数 (%)",
+        "75 分位数 (%)",
+        "最大值 (%)",
+        "累计收益率 (%)",
+    ],
+    "数值": [
+        len(stats),
+        stats.mean(),
+        stats.std(),
+        stats.min(),
+        stats.quantile(0.25),
+        stats.median(),
+        stats.quantile(0.75),
+        stats.max(),
+        df["cum_return"].iloc[-1] * 100,
+    ],
+})
+
+desc["数值"] = desc["数值"].round(2)
+desc
+```
+
 结果怎么读？
 
 左图 回答：「这一年总体赚还是亏？」
