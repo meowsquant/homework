@@ -134,7 +134,7 @@ axes[0].set_ylabel("累计收益率 (%)")
 axes[0].grid(True, alpha=0.3)
 
 axes[1].hist(
-    df["return"] * 100, bins=30, color="#007AFF", alpha=0.75, edgecolor="white"
+    df["return"] * 100, bins=50, color="#007AFF", alpha=0.75, edgecolor="white"
 )
 axes[1].axvline(0, color="black", linestyle="--", linewidth=0.8)
 axes[1].set_title(f"{TICKER} · 日收益率直方图", fontsize=13)
@@ -142,6 +142,7 @@ axes[1].set_xlabel("日收益率 (%)")
 axes[1].set_ylabel("天数")
 
 fig.suptitle("用收益率观察波动：直方图越「散」，日常越颠", fontsize=14, y=1.02)
+fig.autofmt_xdate(rotation=30, ha="right")
 plt.tight_layout()
 plt.show()
 
