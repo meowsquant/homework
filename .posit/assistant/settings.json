@@ -3,7 +3,27 @@
     "bash": {
       "/Users/sissiyang/.local/share/uv/python/cpython-3.14-macos-aarch64-none/bin/python *": "allow",
       ".venv/bin/python *": "allow",
-      "tail *": "allow"
+      "tail *": "allow",
+      "quarto render *": "allow",
+      "git add *": "allow",
+      "git commit *": "allow",
+      "git push *": "allow",
+      "sleep *": "allow",
+      "gh run list *": "allow",
+      "*": "allow",
+      "python3 *": "allow"
+    },
+    "webfetch": {
+      "https://github.com/*": "allow",
+      "https://raw.githubusercontent.com/*": "allow"
+    },
+    "edit": {
+      "*.scss": "allow",
+      "*.yml": "allow",
+      "*.css": "allow"
+    },
+    "executeCode": {
+      "*": "allow"
     }
   }
 }

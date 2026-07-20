@@ -292,7 +292,7 @@ blockquote p {
   background: hsla(0, 0%, 53.3%, 0.1);
 }
 
-/* ===== 图片(自适应,限制最大宽度避免过大) ===== */
+/* ===== 图片(不拉伸,限制最大宽度,居中) ===== */
 img {
   max-width: 100%;
   height: auto;
@@ -301,13 +301,16 @@ img {
   margin-right: auto;
 }
 
-/* 图表图片限制最大宽度 */
+/* 图表图片限制最大宽度,不拉伸小图,覆盖 Bootstrap figure-img */
+figure.figure img,
 .quarto-figure img,
 .figure img,
 img.figure-img {
-  max-width: 800px;
-  width: 100%;
-  object-fit: contain;
+  max-width: 600px !important;
+  width: auto !important;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ===== 提示框(模拟 docsify p.tip) ===== */
