@@ -82,6 +82,11 @@ a:hover {
   font-size: 14px;
 }
 
+/* 强制显示 TOC 子条目（Bootstrap collapse 默认隐藏） */
+#TOC ul.collapse {
+  display: block !important;
+}
+
 #quarto-sidebar .sidebar-title {
   color: #2c3e50;
   font-size: 1.5rem;

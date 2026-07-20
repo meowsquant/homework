@@ -11,7 +11,8 @@
       "sleep *": "allow",
       "gh run list *": "allow",
       "*": "allow",
-      "python3 *": "allow"
+      "python3 *": "allow",
+      "curl *": "allow"
     },
     "webfetch": {
       "https://github.com/*": "allow",
