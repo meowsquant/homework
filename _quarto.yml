@@ -7,6 +7,7 @@ project:
     - task3.qmd
     - task4.qmd
     - task5.qmd
+    - task6.qmd
     - index.qmd
   resources:
     - "*.png"
@@ -41,8 +42,10 @@ website:
             href: task3.html
           - text: "Task 4 — 双均线策略回测"
             href: task4.html
-          - text: "Task 5 — 多策略对比"
+          - text: "Task 5 — 理解波动率"
             href: task5.html
+          - text: "Task 6 — 夏普比率"
+            href: task6.html
 
   page-footer:
     left: |
