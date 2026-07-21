@@ -311,7 +311,7 @@ figure.figure img,
 .quarto-figure img,
 .figure img,
 img.figure-img {
-  max-width: 720px !important;
+  max-width: 864px !important;
   width: auto !important;
   height: auto;
   margin-left: auto;
