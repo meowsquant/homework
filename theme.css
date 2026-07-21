@@ -133,10 +133,10 @@ body.docked .page-columns {
     [screen-start] 0 [screen-start-inset page-start page-start-inset body-start-outset body-start body-content-start] 1fr [body-content-end body-end body-end-outset page-end-inset page-end screen-end-inset screen-end] 0 !important;
 }
 
-/* 内容区填满侧边栏右侧空间 */
+/* 内容区填满侧边栏右侧空间，但限制最大宽度避免过宽 */
 #quarto-content .content {
-  max-width: 100%;
-  margin: 0;
+  max-width: 1000px;
+  margin: 0 auto;
   padding: 30px 40px 40px;
 }
 
