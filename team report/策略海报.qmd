@@ -1,0 +1,274 @@
+---
+format:
+  pdf:
+    latex_engine: xelatex
+    documentclass: article
+    papersize: a4
+    margin:
+      - 0pt
+      - 0pt
+      - 0pt
+      - 0pt
+    header-includes:
+      - \usepackage[fontset=macnew]{ctex}
+      - \usepackage[a4paper,margin=0pt]{geometry}
+      - \usepackage{xcolor}
+      - \usepackage{graphicx}
+      - \usepackage{tikz}
+      - \usepackage{pagecolor}
+      - \usepackage{array}
+      - \usepackage{booktabs}
+      - \usepackage{colortbl}
+      - \usetikzlibrary{shapes.geometric, positioning}
+      - \definecolor{bgdark}{HTML}{1a1a2e}
+      - \definecolor{cardbg}{HTML}{16213e}
+      - \definecolor{accentgreen}{HTML}{2ecc71}
+      - \definecolor{accentred}{HTML}{e74c3c}
+      - \definecolor{accentyellow}{HTML}{f1c40f}
+      - \definecolor{accentblue}{HTML}{3498db}
+      - \definecolor{accentgray}{HTML}{95a5a6}
+      - \definecolor{lighttext}{HTML}{ecf0f1}
+      - \definecolor{subtletext}{HTML}{bdc3c7}
+      - \definecolor{divider}{HTML}{2c3e50}
+      - \pagecolor{bgdark}
+      - \pagestyle{empty}
+      - \setlength{\parindent}{0pt}
+      - \setlength{\parskip}{0pt}
+---
+
+\begin{tikzpicture}[remember picture, overlay]
+
+%% ===== ROW 1: Header — title + conclusion + big numbers + status light =====
+\node[anchor=north west, inner sep=0pt] at (current page.north west) {
+\begin{minipage}[t]{\paperwidth}
+\begin{center}
+\vspace{8mm}
+
+%% Status light (green = pass)
+\begin{tikzpicture}
+\fill[accentgreen] (0,0) circle (4mm);
+\fill[white] (0,0) circle (2.8mm);
+\fill[accentgreen] (0,0) circle (2mm);
+\end{tikzpicture}
+
+\vspace{2mm}
+
+{\color{lighttext}\fontsize{68}{82}\selectfont\bfseries delta0 量化数据报告}
+
+\vspace{1mm}
+
+{\color{subtletext}\fontsize{22}{28}\selectfont 2024-07-19 $\sim$ 2026-07-21 \quad|\quad VQM 三因子多空策略}
+
+\vspace{3mm}
+
+{\color{accentgreen}\fontsize{26}{34}\selectfont\bfseries $\bigtriangleup$ 增长 — 策略总收益 210.8\%，超额 186.7\%，回撤可控 -14.7\%}
+
+\vspace{5mm}
+
+%% Three big numbers
+\begin{tabular}{ccc}
+{\color{accentgreen}\fontsize{56}{68}\selectfont\bfseries +210.8\%} &
+{\color{accentred}\fontsize{56}{68}\selectfont\bfseries -14.7\%} &
+{\color{accentblue}\fontsize{56}{68}\selectfont\bfseries 3.24} \\[2mm]
+{\color{subtletext}\fontsize{16}{20}\selectfont 总收益} &
+{\color{subtletext}\fontsize{16}{20}\selectfont 最大回撤} &
+{\color{subtletext}\fontsize{16}{20}\selectfont 夏普比率} \\
+\end{tabular}
+
+\vspace{6mm}
+
+%% Divider line
+{\color{divider}\rule{\paperwidth}{1.5pt}}
+
+\end{center}
+\end{minipage}
+};
+
+%% ===== ROW 2: Left (overview) | Center (NAV chart) | Right (KPI) =====
+
+%% --- Left block: Research Overview ---
+\node[anchor=north west, inner sep=4mm] at ([xshift=6mm,yshift=-72mm]current page.north west) {
+\begin{minipage}[t]{52mm}
+\begin{center}
+{\color{accentblue}\fontsize{18}{22}\selectfont\bfseries 研究概述}
+\end{center}
+\vspace{3mm}
+
+{\color{subtletext}\fontsize{10}{14}\selectfont
+\begin{tabular}{@{}p{14mm}p{34mm}@{}}
+\textcolor{accentgreen}{\textbf{名称}} & delta0 VQM 策略 \\
+\textcolor{accentgreen}{\textbf{目标}} & 跑赢沪深300，回撤 $\leq$ 15\% \\
+\textcolor{accentgreen}{\textbf{逻辑}} & 动量+质量+价值三因子 Z-score 打分，月度调仓，15\%回撤控制 \\
+\textcolor{accentgreen}{\textbf{市场}} & A股·日线\\
+\textcolor{accentgreen}{\textbf{周期}} & 2024-07-19 $\sim$ 2026-07-21 \\
+\textcolor{accentgreen}{\textbf{样本}} & 分析10只；底座20只 \\
+\textcolor{accentgreen}{\textbf{基准}} & 沪深300指数 \\
+\end{tabular}
+}
+
+\vspace{3mm}
+{\color{subtletext}\fontsize{8}{10}\selectfont CSV: \texttt{price\_qfq.csv}\\\texttt{monthly\_selection.csv}}
+\end{minipage}
+};
+
+%% --- Center block: NAV vs Benchmark ---
+\node[anchor=north, inner sep=0pt] at ([yshift=-74mm]current page.north) {
+\begin{minipage}[t]{95mm}
+\begin{center}
+{\color{accentblue}\fontsize{16}{20}\selectfont\bfseries 业绩与风险主图}
+\end{center}
+\vspace{1mm}
+\includegraphics[width=95mm]{poster/fig\_nav\_benchmark.png}
+
+\vspace{1mm}
+\includegraphics[width=95mm]{poster/fig\_drawdown\_strip.png}
+
+\vspace{1mm}
+{\color{subtletext}\fontsize{9}{12}\selectfont 超额收益主要出现在 \textcolor{accentgreen}{\textbf{2025 Q3 存储芯片主升浪}} 阶段}
+\end{minipage}
+};
+
+%% --- Right block: KPI Dashboard ---
+\node[anchor=north east, inner sep=4mm] at ([xshift=-6mm,yshift=-72mm]current page.north east) {
+\begin{minipage}[t]{52mm}
+\begin{center}
+{\color{accentblue}\fontsize{18}{22}\selectfont\bfseries KPI 看板}
+\end{center}
+\vspace{2mm}
+
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.6}
+{\color{lighttext}\fontsize{9}{12}\selectfont
+\begin{tabular}{@{}p{7mm}p{20mm}r@{}}
+\toprule
+\rowcolor{cardbg}
+\multicolumn{3}{l}{\textcolor{accentgreen}{\textbf{收益}}} \\
+\textcolor{accentgreen}{\textbf{收益}} & 总收益率 & \textcolor{accentgreen}{\textbf{+210.8\%}} \\
+\textcolor{accentgreen}{\textbf{收益}} & 年化收益率 & \textcolor{accentgreen}{\textbf{+118.8\%}} \\
+\rowcolor{cardbg}
+\multicolumn{3}{l}{\textcolor{accentred}{\textbf{风险}}} \\
+\textcolor{accentred}{\textbf{风险}} & 最大回撤 & \textcolor{accentred}{\textbf{-14.7\%}} \\
+\textcolor{accentred}{\textbf{风险}} & 夏普比率 & \textcolor{accentblue}{\textbf{3.24}} \\
+\textcolor{accentred}{\textbf{风险}} & 卡玛比率 & \textcolor{accentblue}{\textbf{8.07}} \\
+\textcolor{accentred}{\textbf{风险}} & 年化波动 & \textcolor{accentred}{\textbf{36.0\%}} \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{3mm}
+{\color{subtletext}\fontsize{8}{10}\selectfont 基准(沪深300):\\总收益+24.2\% 夏普0.86 波动17.0\%}
+\end{minipage}
+};
+
+%% ===== ROW 3: Left (heatmap) | Center (contribution) | Right (market env) =====
+
+%% --- Left: Heatmap ---
+\node[anchor=north west, inner sep=4mm] at ([xshift=6mm,yshift=-148mm]current page.north west) {
+\begin{minipage}[t]{52mm}
+\begin{center}
+{\color{accentblue}\fontsize{14}{18}\selectfont\bfseries 月度收益热力图}
+\end{center}
+\vspace{1mm}
+\includegraphics[width=52mm]{poster/fig\_heatmap.png}
+\end{minipage}
+};
+
+%% --- Center: Contribution bar ---
+\node[anchor=north, inner sep=0pt] at ([yshift=-148mm]current page.north) {
+\begin{minipage}[t]{90mm}
+\begin{center}
+{\color{accentblue}\fontsize{14}{18}\selectfont\bfseries 个股贡献度}
+\end{center}
+\vspace{1mm}
+\includegraphics[width=85mm]{poster/fig\_contrib.png}
+\end{minipage}
+};
+
+%% --- Right: Market Environment Table ---
+\node[anchor=north east, inner sep=4mm] at ([xshift=-6mm,yshift=-148mm]current page.north east) {
+\begin{minipage}[t]{52mm}
+\begin{center}
+{\color{accentblue}\fontsize{14}{18}\selectfont\bfseries 市场环境}
+\end{center}
+\vspace{1mm}
+
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.3}
+{\color{lighttext}\fontsize{7.5}{10}\selectfont
+\begin{tabular}{@{}c c r r@{}}
+\toprule
+\textbf{季度} & \textbf{状态} & \textbf{策略} & \textbf{沪深300} \\
+\midrule
+25Q1 & 震荡 & \textcolor{accentgreen}{+13.7\%} & +1.8\% \\
+25Q2 & 震荡 & \textcolor{accentgreen}{+2.7\%} & +1.2\% \\
+25Q3 & 上涨 & \textcolor{accentgreen}{+69.8\%} & +17.7\% \\
+25Q4 & 震荡 & \textcolor{accentgreen}{+14.9\%} & \textcolor{accentred}{-1.7\%} \\
+26Q1 & 下跌 & \textcolor{accentgreen}{-0.5\%} & \textcolor{accentred}{-5.7\%} \\
+26Q2 & 上涨 & \textcolor{accentgreen}{+47.3\%} & +10.0\% \\
+26Q3 & 震荡 & \textcolor{accentred}{-5.7\%} & \textcolor{accentred}{-4.4\%} \\
+\bottomrule
+\end{tabular}
+}
+\end{minipage}
+};
+
+%% ===== ROW 4: Conclusions & Action (bottom ~12%) =====
+
+\node[anchor=south west, inner sep=0pt] at (current page.south west) {
+\begin{minipage}[t]{\paperwidth}
+{\color{divider}\rule{\paperwidth}{1pt}}
+
+\vspace{3mm}
+\hspace{8mm}
+\begin{minipage}[t]{0.30\paperwidth}
+{\color{accentgreen}\fontsize{12}{16}\selectfont\bfseries $\checkmark$ 优势}
+\vspace{1mm}
+
+{\color{lighttext}\fontsize{9}{12}\selectfont
+1. 三因子Z-score打分有效捕捉存储芯片主升浪\\
+2. 15\%回撤控制将-48\%回撤截断至-14.7\%
+}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.28\paperwidth}
+{\color{accentred}\fontsize{12}{16}\selectfont\bfseries $\times$ 不足}
+\vspace{1mm}
+
+{\color{lighttext}\fontsize{9}{12}\selectfont
+1. 收益高度集中于半导体板块（Top3占124\%）\\
+2. 32\%空仓时间错过部分反弹机会
+}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.30\paperwidth}
+{\color{accentyellow}\fontsize{12}{16}\selectfont\bfseries $\rightarrow$ 下一步}
+\vspace{1mm}
+
+{\color{lighttext}\fontsize{9}{12}\selectfont
+\textcolor{accentgreen}{\textbf{[立即]}} 加入风格约束限制进攻型持仓\\
+\textcolor{accentyellow}{\textbf{[本周]}} 测试延迟切换ETF方案\\
+\textcolor{accentblue}{\textbf{[持续]}} 滚动更新PE/ROE因子
+}
+\end{minipage}
+\hspace{8mm}
+
+\vspace{3mm}
+%% Bottom disclaimer + logo
+\hspace{8mm}
+\begin{minipage}[t]{0.65\paperwidth}
+{\color{subtletext}\fontsize{6}{8}\selectfont
+本量化数据报告不构成投资建议，仅个人间讨论，切勿模仿！本报告已获得版权保护，属于创作者和程翊博所有，切勿盗用商用，违者必究，需负相应的法律责任。}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.20\paperwidth}
+\raggedleft
+\includegraphics[width=22mm]{logo.png}\\
+{\color{subtletext}\fontsize{6}{8}\selectfont 数据来源：AKShare / Tushare}
+\end{minipage}
+\hspace{8mm}
+
+\vspace{4mm}
+\end{minipage}
+};
+
+\end{tikzpicture}
