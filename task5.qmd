@@ -484,8 +484,12 @@ my_reason = (
     '我会选择A，当然如何可以用在A中规划，可口可乐可能会是一个不错的养老股票。'
 )
 
+import textwrap
+
 print(f'我的选择: {my_choice}')
-print(f'理由: {my_reason}')
+print('理由:')
+for line in textwrap.wrap(my_reason, width=40):
+    print(f'  {line}')
 ```
 
 # 挑战任务
