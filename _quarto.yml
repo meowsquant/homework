@@ -8,6 +8,7 @@ project:
     - task4.qmd
     - task5.qmd
     - task6.qmd
+    - task7.qmd
     - index.qmd
   resources:
     - "*.png"
@@ -46,6 +47,8 @@ website:
             href: task5.html
           - text: "Task 6 — 夏普比率"
             href: task6.html
+          - text: "Task 7 — 最大回撤与仓位管理"
+            href: task7.html
 
   page-footer:
     left: |

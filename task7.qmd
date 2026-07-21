@@ -1,0 +1,429 @@
+---
+title: "task 7：最大回撤与仓位管理"
+format: html
+---
+
+# 环境配置
+```{python}
+# ========== 环境准备：导入库 + 回撤 / 仓位工具函数 ==========
+import warnings                                   # 导入警告控制模块
+warnings.filterwarnings('ignore')              # 隐藏次要警告，输出更干净
+
+import numpy as np                              # 数值计算
+import pandas as pd                             # 表格数据处理
+import matplotlib.pyplot as plt                 # 绘图
+import akshare as ak                            # 国内金融数据接口（本章拉美股）
+
+plt.rcParams['font.sans-serif'] = [              # 跨平台中文字体回退
+    'PingFang SC', 'Microsoft YaHei', 'SimHei',
+    'Noto Sans CJK SC', 'WenQuanYi Micro Hei', 'DejaVu Sans',
+]
+plt.rcParams['axes.unicode_minus'] = False      # 坐标轴负号正常显示
+
+def fetch_us_close(symbol: str, years: float = 3.0) -> pd.Series:
+    """联网拉取美股前复权收盘价（AkShare → 新浪财经）。"""
+    start = (
+        pd.Timestamp.today()
+        - pd.DateOffset(years=years, days=30)   # 多留缓冲，避免边界缺数据
+    ).strftime('%Y-%m-%d')
+    df = ak.stock_us_daily(symbol=symbol, adjust='qfq')  # 发起 HTTP 请求
+    if df is None or df.empty:                   # 网络异常时主动报错
+        raise RuntimeError(f'{symbol} 未返回数据，请检查网络或 akshare 版本')
+    df['date'] = pd.to_datetime(df['date'])      # 字符串 → 日期
+    close = (
+        df.set_index('date')                     # 日期作索引
+          .sort_index()                          # 时间升序
+          ['close']                              # 只保留收盘价
+          .loc[lambda s: s.index >= start]       # 截取样本区间
+          .rename(symbol)                        # Series 命名 = 代码
+    )
+    return close
+
+
+def buy_hold_equity(daily_returns: pd.Series) -> pd.Series:
+    """买入持有：日收益连乘 → 净值曲线（起点 ≈ 1）。"""
+    return (1 + daily_returns).cumprod()
+
+
+def compute_drawdown(equity: pd.Series) -> pd.Series:
+    """回撤序列 = 当前净值 / 历史最高净值 − 1（≤ 0）。"""
+    running_peak = equity.cummax()               # 截至当日的历史最高净值
+    return equity / running_peak - 1             # 相对高点的跌幅
+
+
+def max_drawdown(equity: pd.Series) -> float:
+    """最大回撤 = 回撤序列中的最小值（最深的那次坑）。"""
+    return compute_drawdown(equity).min()
+
+
+print('环境就绪 ✓')                               # 提示：环境加载完成
+```
+
+# 最大回撤
+
+**回撤（Drawdown）** = 从历史最高点往下掉了多少比例。可以把它想成：你站在山顶（净值前高），现在往下走了多远。
+
+**最大回撤（Max Drawdown）** = 整段样本里，最深的那一次「坑」。它通常是一个 **负数**，绝对值越大，说明曾经跌得越惨。
+
+例子：净值从 1.5 跌到 1.0，回撤 = (1.0 − 1.5) / 1.5 = **−33%**。
+
+
+```{python}
+# ========== 下载 AAPL → 买入持有净值 → 最大回撤 ==========
+TICKER       = 'AAPL'                            # 演示标的
+PERIOD_YEARS = 3                                 # 回溯约 3 年
+
+print(f'akshare 版本: {ak.__version__}')
+print('接口: ak.stock_us_daily(symbol, adjust="qfq")  # 新浪财经 · 前复权')
+
+prices  = fetch_us_close(TICKER, PERIOD_YEARS)   # 收盘价序列（DatetimeIndex）
+returns = prices.pct_change().dropna()           # 简单日收益率 r_t = P_t/P_{t-1} − 1
+equity  = buy_hold_equity(returns)               # 买入持有净值曲线
+
+drawdown = compute_drawdown(equity)              # 逐日回撤序列（≤ 0）
+max_dd   = max_drawdown(equity)                  # 整段样本最深回撤
+worst_dt = drawdown.idxmin()                     # 回撤最深的那一天
+
+print(f'\n样本区间：{prices.index[0].date()} → {prices.index[-1].date()}，共 {len(returns)} 个交易日')
+print(f'{TICKER} 买入持有 · 最大回撤: {max_dd:.2%}')
+print(f'回撤最深日期: {worst_dt.date()}')
+print(f'末收（AkShare）: {prices.iloc[-1]:.2f}')
+
+```
+
+# 水下曲线
+
+把 逐日回撤序列 画成填充图，就是 水下曲线——净值在水面（前高）之下时，填充区域越深，说明离历史高点越远。
+
+读图时可以关注两件事：
+- 深度：坑有多深（和最大回撤对应）
+- 宽度：在水下待了多久才爬回水面——同样 −20% 的回撤，三个月恢复和三年恢复，心理压力完全不同
+好的策略不仅要回撤浅，还要 恢复快。
+
+```{python}
+# ========== 净值 + 水下曲线（Underwater Plot）==========
+running_peak = equity.cummax()                    # 历史最高净值（用于上图虚线）
+
+PALETTE = dict(equity='#007AFF', underwater='#E82127')  # 统一配色
+
+fig, (ax1, ax2) = plt.subplots(
+    2, 1,                                       # 上下两个子图
+    figsize=(12, 7),
+    sharex=True,                                # 共用横轴（日期）
+    gridspec_kw={'height_ratios': [2, 1]},      # 上图占 2/3 高度
+)
+fig.patch.set_facecolor('#FAFAFA')             # 画布浅灰底
+
+ax1.set_facecolor('#FFFFFF')
+ax1.plot(equity.index, equity, color=PALETTE['equity'], linewidth=1.6, label='买入持有净值')
+ax1.plot(running_peak.index, running_peak, color='gray', linestyle='--', alpha=0.55, label='历史最高')
+ax1.set_title(f'{TICKER} 买入持有净值 & 回撤（水下曲线 · AkShare）', fontsize=14)
+ax1.set_ylabel('净值（起点=1）')
+ax1.legend(loc='upper left')
+ax1.grid(True, linestyle='--', alpha=0.35)
+
+ax2.set_facecolor('#FFFFFF')
+ax2.fill_between(drawdown.index, drawdown, 0, color=PALETTE['underwater'], alpha=0.45)
+ax2.axhline(max_dd, color='#333333', linestyle=':', linewidth=1.2, label=f'最大回撤 {max_dd:.1%}')
+ax2.set_ylabel('回撤')
+ax2.set_xlabel('日期')
+ax2.legend(loc='lower left')
+ax2.grid(True, linestyle='--', alpha=0.35)
+
+plt.tight_layout()                              # 自动调整边距
+plt.show()                                      # 在 Notebook 中显示
+
+```
+
+# 仓位管理：同样策略，不同结果
+
+**仓位（Position Sizing）** = 你投入多少比例的资金去跟随信号。
+
+很多初学者只优化「什么时候买、什么时候卖」，却忽略 **买多少**。其实，在简化模型下，仓位是调节风险最直接的旋钮——**同一套 MA 金叉死叉，满仓和半仓走的是两条不同的人生。**
+
+本章用的简化规则：
+
+| 仓位 | 含义 | 直觉 |
+|------|------|------|
+| **满仓** | 100% 资金跟着策略 | 收益、回撤都「满格」 |
+| **半仓** | 50% 资金参与 | 策略日收益 × 0.5，回撤大约也减半 |
+
+真实交易还要考虑手续费、滑点、杠杆、加仓规则——这里先建立直觉。下一格我们用 **5/20 双均线** 在 AAPL 上跑一遍，并打印三种净值的最大回撤。
+
+
+```{python}
+# ========== 双均线策略：满仓 vs 半仓 ==========
+MA_SHORT, MA_LONG = 5, 20                        # 短/长均线窗口（交易日）
+HALF_SIZE         = 0.5                          # 半仓 = 50% 资金参与
+
+df = pd.DataFrame({'Close': prices, 'Return': returns}).dropna()  # 对齐价格与收益
+df['MA_S'] = df['Close'].rolling(MA_SHORT).mean()   # 短期均线
+df['MA_L'] = df['Close'].rolling(MA_LONG).mean()    # 长期均线
+df['Signal'] = (df['MA_S'] > df['MA_L']).astype(float)  # 1=多头, 0=空仓
+df['StratRet'] = df['Signal'].shift(1) * df['Return']     # 次日按昨日信号交易（无未来函数）
+df = df.dropna()                                 # 去掉 MA 暖机期的 NaN
+
+df['Equity_100'] = buy_hold_equity(df['StratRet'])              # 满仓净值
+df['Equity_50']  = buy_hold_equity(df['StratRet'] * HALF_SIZE) # 半仓：收益按仓位缩放
+df['Equity_BH']  = buy_hold_equity(df['Return'])               # 买入持有对照
+
+scenarios = [                                    # 统一遍历，避免重复代码
+    ('双均线 · 满仓', 'Equity_100'),
+    ('双均线 · 半仓', 'Equity_50'),
+    ('买入持有',      'Equity_BH'),
+]
+
+print('最大回撤对比：')
+for label, col in scenarios:
+    dd = max_drawdown(df[col])                   # 复用上文工具函数
+    print(f'  {label:12s}: {dd:.2%}')
+
+```
+
+# 三条净值曲线对比
+**双均线满仓、双均线半仓、买入持有** 三条净值画在一起。
+
+读图时建议对照三个问题：
+
+- 谁涨得最高？（最终收益）
+- 谁跌得最惨？（最大回撤，回看上一格打印结果）
+- 曲线是否更「平滑」？（半仓往往波动更小）
+
+```{python}
+# ========== 三条净值曲线：仓位如何改变命运 ==========
+STYLE = {                                        # 线型 / 颜色 / 粗细
+    'Equity_100': dict(color='#007AFF', lw=1.6, ls='-',  label='双均线 · 满仓'),
+    'Equity_50':  dict(color='#34C759', lw=1.6, ls='-',  label='双均线 · 半仓'),
+    'Equity_BH':  dict(color='#8E8E93', lw=1.3, ls='--', label='买入持有'),
+}
+
+fig, ax = plt.subplots(figsize=(12, 5))
+fig.patch.set_facecolor('#FAFAFA')
+ax.set_facecolor('#FFFFFF')
+
+for col, kw in STYLE.items():                    # 同一循环画三条曲线
+    ax.plot(df.index, df[col], **kw)
+
+ax.set_title(f'{TICKER} 双均线（{MA_SHORT}/{MA_LONG}）· 仓位对比 · AkShare 行情', fontsize=14)
+ax.set_ylabel('净值')
+ax.set_xlabel('日期')
+ax.legend(loc='upper left', framealpha=0.92)
+ax.grid(True, linestyle='--', alpha=0.35)
+
+plt.tight_layout()
+plt.show()
+
+```
+
+# 挑战任务
+
+## 换策略参数：MA10 vs MA30, 满仓 vs 30仓位
+把 MA 改成 10/30，比较满仓与 30% 仓位的最大回撤。观察：参数变了，轻仓是否仍然明显「减坑」？
+```{python}
+# ========== 双均线策略：满仓 vs 30%仓 ==========
+MA_SHORT, MA_LONG = 10, 30  # 短/长均线窗口（交易日）
+POSITION_SIZE = 0.3  # 30% 仓位
+
+df = pd.DataFrame({"Close": prices, "Return": returns}).dropna()  # 对齐价格与收益
+df["MA_S"] = df["Close"].rolling(MA_SHORT).mean()  # 短期均线
+df["MA_L"] = df["Close"].rolling(MA_LONG).mean()  # 长期均线
+df["Signal"] = (df["MA_S"] > df["MA_L"]).astype(float)  # 1=多头, 0=空仓
+df["StratRet"] = (
+    df["Signal"].shift(1) * df["Return"]
+)  # 次日按昨日信号交易（无未来函数）
+df = df.dropna()  # 去掉 MA 暖机期的 NaN
+
+df["Equity_100"] = buy_hold_equity(df["StratRet"])  # 满仓净值
+df["Equity_30"] = buy_hold_equity(
+    df["StratRet"] * POSITION_SIZE
+)  # 30% 仓：收益按仓位缩放
+df["Equity_BH"] = buy_hold_equity(df["Return"])  # 买入持有对照
+
+scenarios = [  # 统一遍历，避免重复代码
+    ("双均线 · 满仓", "Equity_100"),
+    ("双均线 · 30%", "Equity_30"),
+    ("买入持有", "Equity_BH"),
+]
+
+print("最大回撤对比：")
+for label, col in scenarios:
+    dd = max_drawdown(df[col])  # 复用上文工具函数
+    print(f"  {label:12s}: {dd:.2%}")
+```
+
+
+```{python}
+# ========== 三条净值曲线：仓位如何改变命运 ==========
+STYLE = {                                        # 线型 / 颜色 / 粗细
+    'Equity_100': dict(color='#007AFF', lw=1.6, ls='-',  label='双均线 · 满仓'),
+    'Equity_30':  dict(color='#34C759', lw=1.6, ls='-',  label='双均线 · 30%仓'),
+    'Equity_BH':  dict(color='#8E8E93', lw=1.3, ls='--', label='买入持有'),
+}
+
+fig, ax = plt.subplots(figsize=(12, 5))
+fig.patch.set_facecolor('#FAFAFA')
+ax.set_facecolor('#FFFFFF')
+
+for col, kw in STYLE.items():                    # 同一循环画三条曲线
+    ax.plot(df.index, df[col], **kw)
+
+ax.set_title(f'{TICKER} 双均线（{MA_SHORT}/{MA_LONG}）· 仓位对比 · AkShare 行情', fontsize=14)
+ax.set_ylabel('净值')
+ax.set_xlabel('日期')
+ax.legend(loc='upper left', framealpha=0.92)
+ax.grid(True, linestyle='--', alpha=0.35)
+
+plt.tight_layout()
+plt.show()
+```
+
+## 恢复时间
+
+找到最大回撤发生日，看之后 **60 个交易日** 内净值是否回到前高。（提示：可用 `running_peak` 与 `equity` 对比，或先看水下曲线宽度）
+
+```{python}
+# ========== 满仓策略：最大回撤日 + 60 日恢复检查 ==========
+dd_series = compute_drawdown(df["Equity_100"])  # 满仓回撤序列
+worst_idx = dd_series.idxmin()  # 最大回撤发生日
+worst_dd = dd_series.min()  # 最大回撤值
+peak_before = df["Equity_100"].loc[:worst_idx].max()  # 回撤前的前高净值
+
+# 最大回撤日后 60 个交易日的窗口
+loc_worst = df.index.get_loc(worst_idx)
+window_end = df.index[min(loc_worst + 60, len(df) - 1)]
+window_df = df.loc[worst_idx:window_end]  # 窗口内数据
+window_dd = dd_series.loc[worst_idx:window_end]
+window_peak = window_df["Equity_100"].cummax()  # 窗口内逐日前高
+
+# 检查 60 日内是否回到前高
+recovered_60 = (window_df["Equity_100"] >= peak_before).any()
+recovery_dt = (
+    window_df.index[window_df["Equity_100"] >= peak_before][0] if recovered_60 else None
+)
+
+# 若 60 日内未恢复，查看实际恢复日
+full_after = df["Equity_100"].loc[worst_idx:]
+recovery_full = full_after[full_after >= peak_before]
+recovery_actual = recovery_full.index[0] if len(recovery_full) > 0 else None
+days_actual = df.index.get_loc(recovery_actual) - loc_worst if recovery_actual else None
+
+print(f"最大回撤日:   {worst_idx.date()}")
+print(f"最大回撤值:   {worst_dd:.2%}")
+print(f"回撤前前高:   {peak_before:.4f}")
+print(f"回撤日净值:   {df['Equity_100'].loc[worst_idx]:.4f}")
+print(f"\n--- 60 个交易日内恢复检查 ---")
+print(f"是否恢复前高: {'是 ✓' if recovered_60 else '否 ✗'}")
+if recovered_60:
+    print(f"恢复日期:     {recovery_dt.date()}")
+    print(f"用时:         {df.index.get_loc(recovery_dt) - loc_worst} 个交易日")
+else:
+    print(
+        f"最终恢复日期: {recovery_actual.date() if recovery_actual else '样本结束未恢复'}"
+    )
+    if days_actual:
+        print(f"实际用时:     {days_actual} 个交易日（约 {days_actual / 21:.0f} 个月）")
+
+# ---------- 绘图 ----------
+fig, (ax1, ax2) = plt.subplots(
+    2,
+    1,
+    figsize=(13, 8),
+    sharex=True,
+    gridspec_kw={"height_ratios": [2, 1]},
+)
+fig.patch.set_facecolor("#FAFAFA")
+
+# 上图：净值 + 前高线 + 关键标注
+ax1.set_facecolor("#FFFFFF")
+ax1.plot(
+    window_df.index,
+    window_df["Equity_100"],
+    color="#007AFF",
+    linewidth=1.8,
+    label="满仓净值",
+)
+ax1.axhline(
+    peak_before,
+    color="#FF9500",
+    linestyle="--",
+    linewidth=1.3,
+    label=f"前高净值 {peak_before:.4f}",
+)
+ax1.plot(
+    window_df.index,
+    window_peak,
+    color="gray",
+    linestyle=":",
+    linewidth=1.0,
+    alpha=0.6,
+    label="窗口内 cummax",
+)
+ax1.scatter(
+    worst_idx,
+    df["Equity_100"].loc[worst_idx],
+    color="#E82127",
+    s=80,
+    zorder=5,
+    label=f"最大回撤日 {worst_idx.date()}",
+)
+if recovered_60 and recovery_dt is not None:
+    ax1.scatter(
+        recovery_dt,
+        df["Equity_100"].loc[recovery_dt],
+        color="#34C759",
+        s=80,
+        zorder=5,
+        label=f"恢复日 {recovery_dt.date()}",
+    )
+    ax1.annotate(
+        f"{recovery_dt.date()}\n恢复前高",
+        (recovery_dt, df["Equity_100"].loc[recovery_dt]),
+        textcoords="offset points",
+        xytext=(10, -20),
+        fontsize=9,
+        color="#34C759",
+        fontweight="bold",
+    )
+ax1.axvline(window_end, color="#8E8E93", linestyle="-.", linewidth=1.0, alpha=0.5)
+ax1.annotate(
+    "60 交易日边界",
+    (window_end, ax1.get_ylim()[0]),
+    textcoords="offset points",
+    xytext=(-80, 5),
+    fontsize=8,
+    color="#8E8E93",
+)
+ax1.set_title(
+    f"{TICKER} 双均线满仓 · 最大回撤后 60 日恢复分析\n"
+    f"回撤日 {worst_idx.date()} | 回撤 {worst_dd:.1%} | "
+    f"60 日内{'已恢复' if recovered_60 else '未恢复'}",
+    fontsize=13,
+)
+ax1.set_ylabel("净值")
+ax1.legend(loc="lower right", fontsize=9, framealpha=0.92)
+ax1.grid(True, linestyle="--", alpha=0.35)
+
+# 下图：水下曲线
+ax2.set_facecolor("#FFFFFF")
+ax2.fill_between(
+    window_dd.index, window_dd, 0, color="#E82127", alpha=0.35, label="回撤"
+)
+ax2.axhline(
+    worst_dd,
+    color="#333333",
+    linestyle=":",
+    linewidth=1.2,
+    label=f"最大回撤 {worst_dd:.1%}",
+)
+ax2.axvline(window_end, color="#8E8E93", linestyle="-.", linewidth=1.0, alpha=0.5)
+ax2.set_ylabel("回撤")
+ax2.set_xlabel("日期")
+ax2.legend(loc="lower right", fontsize=9, framealpha=0.92)
+ax2.grid(True, linestyle="--", alpha=0.35)
+
+plt.tight_layout()
+plt.show()
+```
+
+## 你只能承受 −15% 回撤，本章实验里哪种仓位更合适？若都不合适，你会怎么调整——降仓位，还是换策略？
+双均线半仓策略14%左右的回撤是比较合适的。其他策略都面临比较大的回撤。
