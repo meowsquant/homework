@@ -50,7 +50,7 @@ path_table = pd.DataFrame({'股票A': stock_a, '股票B': stock_b}, index=days)
 print('价格路径对照：')
 display(path_table)
 
-fig, ax = plt.subplots(figsize=(8, 4))
+fig, ax = plt.subplots(figsize=(9.6, 4.8))
 ax.plot(x, stock_a, 'o-', color='#007AFF', linewidth=2.5, markersize=9, label='股票 A · 平稳上涨')
 ax.plot(x, stock_b, 's-', color='#E82127', linewidth=2.5, markersize=9, label='股票 B · 大起大落')
 ax.axhline(120, color='gray', linestyle='--', alpha=0.5, label='终点都是 120')
@@ -76,7 +76,7 @@ print(f'股票 B 总涨幅: {ret_b:.0%}')
 
 ```{python}
 # ========== 5.2 电梯 vs 过山车 ==========
-fig, axes = plt.subplots(1, 2, figsize=(9, 4), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.8), sharey=True)
 
 axes[0].plot(x, stock_a, 'o-', color='#007AFF', linewidth=2.5, markersize=8)
 axes[0].set_title('股票 A · 像坐电梯\n上涨平稳', fontsize=12)
@@ -124,7 +124,7 @@ df = df.dropna().copy()
 
 df["cum_return"] = (1 + df["return"]).cumprod() - 1
 
-fig, axes = plt.subplots(1, 2, figsize=(9, 4))
+fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.8))
 
 axes[0].plot(df.index, df["cum_return"] * 100, color="#007AFF", linewidth=1.5)
 axes[0].axhline(0, color="gray", linestyle="--", linewidth=0.8)
@@ -243,7 +243,7 @@ vol_table = pd.DataFrame(records, index=TICKERS)
 print("波动率对比表：")
 display(vol_table)
 
-fig, ax = plt.subplots(figsize=(8, 5))
+fig, ax = plt.subplots(figsize=(9.6, 6))
 bars = ax.bar(
     [NAMES[t] for t in TICKERS],
     [v * 100 for v in ann_vols],
@@ -297,7 +297,7 @@ def max_drawdown(nav):
 
 
 fig, axes = plt.subplots(
-    2, 1, figsize=(11, 7), sharex=True, gridspec_kw={"height_ratios": [2, 1]}
+    2, 1, figsize=(13.2, 8.4), sharex=True, gridspec_kw={"height_ratios": [2, 1]}
 )
 
 axes[0].plot(
@@ -393,7 +393,7 @@ for t in EXP_TICKERS:
 
 exp_rets = exp_close.pct_change().dropna()
 
-fig, ax = plt.subplots(figsize=(10, 7))
+fig, ax = plt.subplots(figsize=(12, 8.4))
 
 for t, c in zip(EXP_TICKERS, EXP_COLORS):
     st = annual_stats(exp_rets[t])
@@ -507,7 +507,7 @@ print(lv2_vols.sort_values(ascending=False).map(lambda x: f"{float(x):.2%}"))
 lv3_tickers = [lv1_ticker] + lv2_tickers
 lv3_colors = ["#E82127", "#007AFF", "#FF9500", "#34C759", "#5856D6", "#AF52DE"]
 
-fig, axes = plt.subplots(2, 3, figsize=(10, 6))
+fig, axes = plt.subplots(2, 3, figsize=(12, 7.2))
 axes_flat = axes.flatten()
 
 for i, t in enumerate(lv3_tickers):
@@ -543,7 +543,7 @@ cand_rets = cand_close.pct_change().dropna()
 cand_vols = cand_rets.std() * np.sqrt(TRADING_DAYS)
 cand_vols = cand_vols.sort_values(ascending=False)
 
-fig, ax = plt.subplots(figsize=(9, 6))
+fig, ax = plt.subplots(figsize=(10.8, 7.2))
 cand_order = cand_vols.index.tolist()
 cand_palette = plt.cm.tab10(np.linspace(0, 1, len(cand_order)))
 

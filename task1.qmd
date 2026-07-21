@@ -47,7 +47,7 @@ for col in ["ret_quant", "ret_random", "ret_buyhold"]:  # 遍历三种收益列
     df[f"nav_{col}"] = (1 + df[col]).cumprod()  # (1+r) 连乘 = 累计净值
 
 # ========== 第7步：画图——上图价格+均线，下图三种净值 ==========
-fig, axes = plt.subplots(2, 1, figsize=(8, 5), sharex=True)  # 2行1列子图，共用横轴
+fig, axes = plt.subplots(2, 1, figsize=(9.6, 6), sharex=True)  # 2行1列子图，共用横轴
 
 axes[0].plot(df["close"], label="Price", color="black", linewidth=1.4)  # 模拟收盘价
 axes[0].plot(df["ma20"], label="MA20", color="tab:blue", alpha=0.9)  # MA20
@@ -95,7 +95,7 @@ df = pd.DataFrame(
     }
 )
 
-plt.figure(figsize=(8, 4))                     # 创建画布，宽8高4英寸
+plt.figure(figsize=(9.6, 4.8))                     # 创建画布，宽8高4英寸
 plt.plot(df["closing price"], label="closing price", alpha=0.6, linewidth=1)
 plt.plot(df["MA5"], label="MA5", linewidth=1.5)
 plt.plot(df["MA20"], label="MA20", linewidth=1.5)
@@ -135,7 +135,7 @@ n_days = 250                # 每只走 250 个交易日（约一年）
 start_price = 100           # 起始价都是 100 元
 daily_volatility = 0.02     # 日波动强度（标准差约2%）
 
-fig, axes = plt.subplots(1, 3, figsize=(10, 4))  # 1行3列，三个子图
+fig, axes = plt.subplots(1, 3, figsize=(12, 4.8))  # 1行3列，三个子图
 
 # --- 左图：画出 50 条价格路径 ---
 all_paths = []              # 用来存每只股票的路径
@@ -246,7 +246,7 @@ curves_A = simulate_player(win_prob_no_edge, kelly_fraction)       # 无优势 +
 curves_B = simulate_player(win_prob_edge, kelly_fraction)          # 有优势 + 凯利
 curves_C = simulate_player(win_prob_edge, aggressive_fraction)     # 有优势 + 重仓
 
-fig, axes = plt.subplots(1, 3, figsize=(10, 4))  # 三个玩家各一张子图
+fig, axes = plt.subplots(1, 3, figsize=(12, 4.8))  # 三个玩家各一张子图
 
 configs = [  # 三个子图的配置
     (curves_A, 'Player A: No edge (50% win + Kelly)', 'red', f'50% win, {kelly_fraction*100:.1f}% position'),
@@ -389,7 +389,7 @@ def plot_stock(df, symbol=None, title=None):
             title = f"{date_range} · closing price"
 
     fig, axes = plt.subplots(
-        2, 1, figsize=(8, 5), sharex=True, gridspec_kw={"height_ratios": [3, 1]}
+        2, 1, figsize=(9.6, 6), sharex=True, gridspec_kw={"height_ratios": [3, 1]}
     )
 
     axes[0].plot(df.index, df["Close"], color="tab:blue", linewidth=1.5)

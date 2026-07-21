@@ -37,7 +37,7 @@ ret_noise = np.random.normal(0.0, 0.015, n_noise)    # 横盘：均值约0，波
 price = 100 * np.cumprod(1 + np.r_[ret_up, ret_down, ret_noise])  # 拼成价格
 x = np.arange(len(price))  # 横轴：第几个交易日
 
-fig, ax = plt.subplots(figsize=(8, 4))  # 创建子图
+fig, ax = plt.subplots(figsize=(9.6, 4.8))  # 创建子图
 ax.plot(x, price, color='black', linewidth=1.2, label='Price')  # 在子图上画折线
 
 ax.axvspan(0, n_up, alpha=0.15, color='green', label='Uptrend')  # 用色块标出区间
@@ -63,7 +63,7 @@ print('Green zone: overall upward | Red zone: overall downward | Gray zone: dire
 demo = pd.DataFrame({'Close': price})           # 用上面模拟的价格
 demo['MA20'] = demo['Close'].rolling(20).mean()  # 20日移动平均
 
-fig, ax = plt.subplots(figsize=(8, 4))  # 创建子图
+fig, ax = plt.subplots(figsize=(9.6, 4.8))  # 创建子图
 ax.plot(demo['Close'], label='Raw Close Price (Noisy)', color='lightgray', linewidth=1.5)  # 在子图上画折线
 ax.plot(demo['MA20'], label='20-Day Moving Average (Smoother)', color='tab:blue', linewidth=2)  # 在子图上画折线
 ax.set_title('Why Do We Need Averaging? — Smoothing Noise to See Trends', fontsize=14)  # 设置子图标题
@@ -148,7 +148,7 @@ display(df.tail(8))  # 在 Notebook 中美观显示表格
 
 ```{python}
 # ========== 画收盘价 + 两条均线 ==========
-plt.figure(figsize=(8, 4))  # 创建画布
+plt.figure(figsize=(9.6, 4.8))  # 创建画布
 plt.plot(df.index, df['Close'], label='Close Price', color='gray', alpha=0.5, linewidth=1)  # 画折线图
 plt.plot(df.index, df['MA5'], label='MA5 (5-day)', color='tab:orange', linewidth=1.5)  # 画折线图
 plt.plot(df.index, df['MA20'], label='MA20 (20-day)', color='tab:blue', linewidth=2)  # 画折线图
@@ -191,7 +191,7 @@ print(death.tail(3).index.strftime('%Y-%m-%d').tolist())  # 打印输出
 
 ```{python}
 # ========== 金叉死叉标注图 ==========
-fig, ax = plt.subplots(figsize=(9, 5))  # 创建子图
+fig, ax = plt.subplots(figsize=(10.8, 6))  # 创建子图
 
 ax.plot(df.index, df['Close'], color='gray', alpha=0.4, linewidth=1, label='Close Price')  # 在子图上画折线
 ax.plot(df.index, df['MA5'], color='tab:orange', linewidth=1.5, label='MA5')  # 在子图上画折线
@@ -255,7 +255,7 @@ display(df[df['trade'] != 0][['Close', 'MA5', 'MA20', 'signal', 'trade']].tail(6
 buys = df[df['trade'] == 1]    # 所有买入日
 sells = df[df['trade'] == -1]  # 所有卖出日
 
-fig, axes = plt.subplots(2, 1, figsize=(9, 6), sharex=True,  # 创建子图
+fig, axes = plt.subplots(2, 1, figsize=(10.8, 7.2), sharex=True,  # 创建子图
                          gridspec_kw={'height_ratios': [3, 1]})  # 子图高度比例
 ax_price, ax_pos = axes  # 上图价格、下图持仓
 
@@ -295,7 +295,7 @@ recent = df[df.index >= cutoff_date] if len(df) > 120 else df.tail(120)  # 取�
 buys_r = recent[recent['trade'] == 1]  # 最近区间的买入点
 sells_r = recent[recent['trade'] == -1]  # 最近区间的卖出点
 
-fig, ax = plt.subplots(figsize=(9, 4))  # 创建子图
+fig, ax = plt.subplots(figsize=(10.8, 4.8))  # 创建子图
 ax.plot(recent.index, recent['Close'], color='gray', alpha=0.5, linewidth=1, label='Close Price')  # 在子图上画折线
 ax.plot(recent.index, recent['MA5'], color='tab:orange', linewidth=1.8, label='MA5')  # 在子图上画折线
 ax.plot(recent.index, recent['MA20'], color='tab:blue', linewidth=2.2, label='MA20')  # 在子图上画折线
@@ -357,7 +357,7 @@ display(df.tail(8))
 buys = df[df['trade'] == 1]
 sells = df[df['trade'] == -1]
 
-fig, axes = plt.subplots(2, 1, figsize=(9, 6), sharex=True,
+fig, axes = plt.subplots(2, 1, figsize=(10.8, 7.2), sharex=True,
                          gridspec_kw={'height_ratios': [3, 1]})
 ax_price, ax_pos = axes
 
@@ -396,7 +396,7 @@ recent = df[df.index >= cutoff_date] if len(df) > 120 else df.tail(120)
 buys_r = recent[recent['trade'] == 1]
 sells_r = recent[recent['trade'] == -1]
 
-fig, ax = plt.subplots(figsize=(9, 4))
+fig, ax = plt.subplots(figsize=(10.8, 4.8))
 ax.plot(recent.index, recent['Close'], color='gray', alpha=0.5, linewidth=1, label='Close Price')
 ax.plot(recent.index, recent['MA5'], color='tab:orange', linewidth=1.8, label='MA5')
 ax.plot(recent.index, recent['MA20'], color='tab:blue', linewidth=2.2, label='MA20')
@@ -466,7 +466,7 @@ display(df.tail(8))
 buys = df[df['trade'] == 1]
 sells = df[df['trade'] == -1]
 
-fig, axes = plt.subplots(2, 1, figsize=(9, 6), sharex=True,
+fig, axes = plt.subplots(2, 1, figsize=(10.8, 7.2), sharex=True,
                          gridspec_kw={'height_ratios': [3, 1]})
 ax_price, ax_pos = axes
 
@@ -509,7 +509,7 @@ recent = df[df.index >= cutoff_date] if len(df) > 120 else df.tail(120)
 buys_r = recent[recent['trade'] == 1]
 sells_r = recent[recent['trade'] == -1]
 
-fig, ax = plt.subplots(figsize=(9, 4))
+fig, ax = plt.subplots(figsize=(10.8, 4.8))
 ax.plot(recent.index, recent['Close'], color='gray', alpha=0.5, linewidth=1, label='Close Price')
 ax.plot(recent.index, recent['MA10'], color='tab:orange', linewidth=1.8, label='MA10')
 ax.plot(recent.index, recent['MA30'], color='tab:blue', linewidth=2.2, label='MA30')

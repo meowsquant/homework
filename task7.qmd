@@ -108,7 +108,7 @@ PALETTE = dict(equity='#007AFF', underwater='#E82127')  # 统一配色
 
 fig, (ax1, ax2) = plt.subplots(
     2, 1,                                       # 上下两个子图
-    figsize=(12, 7),
+    figsize=(14.4, 8.4),
     sharex=True,                                # 共用横轴（日期）
     gridspec_kw={'height_ratios': [2, 1]},      # 上图占 2/3 高度
 )
@@ -197,7 +197,7 @@ STYLE = {                                        # 线型 / 颜色 / 粗细
     'Equity_BH':  dict(color='#8E8E93', lw=1.3, ls='--', label='买入持有'),
 }
 
-fig, ax = plt.subplots(figsize=(12, 5))
+fig, ax = plt.subplots(figsize=(14.4, 6))
 fig.patch.set_facecolor('#FAFAFA')
 ax.set_facecolor('#FFFFFF')
 
@@ -260,7 +260,7 @@ STYLE = {                                        # 线型 / 颜色 / 粗细
     'Equity_BH':  dict(color='#8E8E93', lw=1.3, ls='--', label='买入持有'),
 }
 
-fig, ax = plt.subplots(figsize=(12, 5))
+fig, ax = plt.subplots(figsize=(14.4, 6))
 fig.patch.set_facecolor('#FAFAFA')
 ax.set_facecolor('#FFFFFF')
 
@@ -327,7 +327,7 @@ else:
 fig, (ax1, ax2) = plt.subplots(
     2,
     1,
-    figsize=(13, 8),
+    figsize=(15.6, 9.6),
     sharex=True,
     gridspec_kw={"height_ratios": [2, 1]},
 )
