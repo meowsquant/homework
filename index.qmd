@@ -32,11 +32,12 @@ title: "量化交易入门 — 作业"
 
 基于 20 只股票数据 · 聚焦 10 只核心分析 · VQM 三因子多空策略
 
-| 交付物 | 说明 | 下载 |
+| 内容 | 说明 | 链接 |
 | --- | --- | --- |
-| 策略报告 | 完整研究报告（Word 版） | [策略报告.docx](downloads/策略报告.docx) |
-| 策略海报 | A4 一页式数据海报（PDF） | [策略海报.pdf](downloads/策略海报.pdf) |
-| 策略附件 | 原始数据 CSV 压缩包（ZIP） | [策略附件.zip](downloads/策略附件.zip) |
+| 在线报告 | 完整研究报告（HTML 页面） | [查看报告](team report/小组报告.html) |
+| 策略报告 | Word 版本下载 | [小组报告.docx](team report/小组报告.docx) |
+| 策略海报 | A4 一页式数据海报（PDF） | [策略海报.pdf](team report/poster/poster.pdf) |
+| 策略附件 | 原始数据 CSV 压缩包（ZIP） | [策略附件.zip](team report/attachments.zip) |
 
 **关键结论**：策略总收益 +210.8%，超额 +186.7%，最大回撤 -14.7%，夏普 3.24，三项成功标准全部达标。
 

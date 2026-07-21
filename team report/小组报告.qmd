@@ -11,7 +11,7 @@ format: html
 队长：小喵因子
 队员：桃，标，风中闻笛，不知 Peter
 参与方式：组队学习
-下载链接：[策略报告](downloads/策略报告.docx) | [策略海报](downloads/策略海报.pdf) | [策略附件](downloads/策略附件.zip)
+下载链接：[策略报告](小组报告.docx) | [策略海报](poster/poster.pdf) | [策略附件](attachments.zip)
 
 ---
 
