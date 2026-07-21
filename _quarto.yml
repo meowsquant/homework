@@ -54,6 +54,8 @@ website:
   page-footer:
     left: |
       <a href="https://github.com/meowsquant/homework" target="_blank">GitHub</a> · 量化交易入门作业
+    center: |
+      <span style="font-size:0.8em;color:#e74c3c;">⚠ 量化数据报告，不构成投资建议，仅个人间讨论，切勿模仿！</span>
     right: |
       Built with [Quarto](https://quarto.org)
 
