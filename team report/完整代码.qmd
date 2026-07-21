@@ -1,0 +1,1227 @@
+---
+title: "codes"
+format: html
+---
+# Value + Quality + Momentum 三因子策略
+
+## 第一步：获取前复权日线数据
+
+```{python}
+import akshare as ak
+import pandas as pd
+import numpy as np
+import time
+import os
+from datetime import datetime
+
+# =========================
+# 股票池
+# =========================
+
+stocks = {
+    "600085": "同仁堂",
+    "002287": "奇正藏药",
+    "603986": "兆易创新",
+    "001309": "德明利",
+    "600276": "恒瑞医药",
+    "688235": "百济神州",
+    "600519": "贵州茅台",
+    "09992": "泡泡玛特",
+    "00700": "腾讯控股",
+    "515100": "红利ETF",
+    "600436": "片仔癀",
+    "600329": "达仁堂",
+    "301308": "江波龙",
+    "688525": "佰维存储",
+    "688008": "澜起科技",
+    "688766": "普冉股份",
+    "000538": "云南白药",
+    "002422": "科伦药业",
+    "000333": "美的集团",
+    "600887": "伊利股份",
+}
+
+START = "2024-07-19"
+END = "2026-07-21"
+DATA_DIR = "Ashare20260721"
+
+# =========================
+# 辅助函数
+# =========================
+
+def csv_filename(code):
+    """A股代码转本地CSV文件名。"""
+    if code.startswith("6"):
+        return f"{code}.SH.csv"
+    elif code.startswith(("0", "3")):
+        return f"{code}.SZ.csv"
+    return None
+
+
+# 统一列名（以本地A股CSV为基准，共29列）
+UNIFIED_COLS = [
+    "ts_code", "trade_date", "name",
+    "open", "high", "low", "close",
+    "pre_close", "change", "pct_chg",
+    "vol", "amount", "adj_factor", "first_adj", "last_adj",
+    "open_qfq", "high_qfq", "low_qfq", "close_qfq",
+    "pre_close_qfq", "change_qfq", "pct_chg_qfq",
+    "open_hfq", "high_hfq", "low_hfq", "close_hfq",
+    "pre_close_hfq", "change_hfq", "pct_chg_hfq",
+]
+
+# =========================
+# 1. 本地读取17只A股 (全部29列)
+# =========================
+
+all_price = []
+
+for code, name in stocks.items():
+    fname = csv_filename(code)
+    if fname and os.path.exists(os.path.join(DATA_DIR, fname)):
+        df = pd.read_csv(os.path.join(DATA_DIR, fname))
+        df["trade_date"] = pd.to_datetime(df["trade_date"], format="%Y%m%d")
+        all_price.append(df)
+        print(f"[本地] {code} {name}: {len(df)} 行")
+    else:
+        print(f"[本地] {code} {name} 无CSV, 转在线获取")
+
+# =========================
+# 2. 在线获取3只港股/ETF (前复权日线)
+# =========================
+
+# --- 00700 腾讯控股 (港股) ---
+df_hk1 = ak.stock_hk_daily(symbol="00700", adjust="qfq")
+df_hk1["date"] = pd.to_datetime(df_hk1["date"])
+
+df_hk1_out = pd.DataFrame(columns=UNIFIED_COLS)
+df_hk1_out["trade_date"] = df_hk1["date"]
+df_hk1_out["ts_code"] = "00700.HK"
+df_hk1_out["name"] = "腾讯控股"
+for col in ["open", "high", "low", "close"]:
+    df_hk1_out[col] = df_hk1[col].values
+    df_hk1_out[f"{col}_qfq"] = df_hk1[col].values
+df_hk1_out["vol"] = df_hk1["volume"].values
+df_hk1_out["amount"] = df_hk1["amount"].values
+df_hk1_out["pct_chg"] = df_hk1["close"].pct_change() * 100
+df_hk1_out["pct_chg_qfq"] = df_hk1_out["pct_chg"]
+all_price.append(df_hk1_out)
+print(f"[在线] 00700 腾讯控股: {len(df_hk1_out)} 行")
+
+time.sleep(2)
+
+# --- 09992 泡泡玛特 (港股) ---
+df_hk2 = ak.stock_hk_daily(symbol="09992", adjust="qfq")
+df_hk2["date"] = pd.to_datetime(df_hk2["date"])
+
+df_hk2_out = pd.DataFrame(columns=UNIFIED_COLS)
+df_hk2_out["trade_date"] = df_hk2["date"]
+df_hk2_out["ts_code"] = "09992.HK"
+df_hk2_out["name"] = "泡泡玛特"
+for col in ["open", "high", "low", "close"]:
+    df_hk2_out[col] = df_hk2[col].values
+    df_hk2_out[f"{col}_qfq"] = df_hk2[col].values
+df_hk2_out["vol"] = df_hk2["volume"].values
+df_hk2_out["amount"] = df_hk2["amount"].values
+df_hk2_out["pct_chg"] = df_hk2["close"].pct_change() * 100
+df_hk2_out["pct_chg_qfq"] = df_hk2_out["pct_chg"]
+all_price.append(df_hk2_out)
+print(f"[在线] 09992 泡泡玛特: {len(df_hk2_out)} 行")
+
+time.sleep(2)
+
+# --- 515100 红利ETF (手动前复权) ---
+etf_raw = ak.fund_etf_hist_sina(symbol="sh515100")
+etf_raw["date"] = pd.to_datetime(etf_raw["date"])
+etf_raw = etf_raw.sort_values("date").reset_index(drop=True)
+
+div_data = ak.fund_etf_dividend_sina(symbol="sh515100")
+div_data["日期"] = pd.to_datetime(div_data["日期"])
+div_data["累计分红"] = div_data["累计分红"].astype(float)
+div_data = div_data.sort_values("日期").reset_index(drop=True)
+div_data["单次分红"] = div_data["累计分红"].diff().fillna(
+    div_data["累计分红"].iloc[0]
+)
+
+etf_qfq = etf_raw.copy()
+
+for _, row in div_data.iterrows():
+    div_date = row["日期"]
+    div_amount = row["单次分红"]
+
+    mask_on = etf_qfq["date"] == div_date
+    if mask_on.any():
+        close_on_div = etf_qfq.loc[mask_on, "close"].iloc[0]
+    else:
+        mask_after = etf_qfq["date"] >= div_date
+        if mask_after.any():
+            close_on_div = etf_qfq.loc[mask_after, "close"].iloc[0]
+        else:
+            continue
+
+    factor = (close_on_div - div_amount) / close_on_div
+    mask_before = etf_qfq["date"] < div_date
+    for col in ["open", "high", "low", "close"]:
+        etf_qfq.loc[mask_before, col] = (
+            etf_qfq.loc[mask_before, col] * factor
+        )
+
+df_etf_out = pd.DataFrame(columns=UNIFIED_COLS)
+df_etf_out["trade_date"] = etf_raw["date"]
+df_etf_out["ts_code"] = "515100.SH"
+df_etf_out["name"] = "红利ETF"
+for col in ["open", "high", "low", "close"]:
+    df_etf_out[col] = etf_raw[col].values
+df_etf_out["vol"] = etf_raw["volume"].values
+df_etf_out["amount"] = etf_raw["amount"].values
+df_etf_out["pct_chg"] = etf_raw["close"].pct_change() * 100
+for col in ["open", "high", "low", "close"]:
+    df_etf_out[f"{col}_qfq"] = etf_qfq[col].values
+df_etf_out["pct_chg_qfq"] = etf_qfq["close"].pct_change() * 100
+all_price.append(df_etf_out)
+print(f"[在线] 515100 红利ETF: {len(df_etf_out)} 行")
+
+# =========================
+# 3. 拼接 + 过滤日期 + 排序
+# =========================
+
+price = pd.concat(all_price, ignore_index=True)
+price = price[(price["trade_date"] >= START) & (price["trade_date"] <= END)]
+price = price.sort_values(["ts_code", "trade_date"]).reset_index(drop=True)
+
+# 导出
+price.to_csv("price_qfq_20240719_20260721.csv", index=False, encoding="utf-8-sig")
+
+print(f"\n共 {len(price)} 行, {price['ts_code'].nunique()} 只股票")
+print(f"时间范围: {price['trade_date'].min().date()} ~ {price['trade_date'].max().date()}")
+```
+
+## 第二步：在线获取 PE 和 ROE
+
+```{python}
+# =========================
+# 获取 PE (市盈率TTM)
+# =========================
+# A股: stock_zh_valuation_baidu
+# 港股: stock_hk_valuation_baidu
+# ETF: 无PE概念, 设为NaN
+
+pe_dict = {}
+
+for code in stocks:
+    try:
+        if code in ("00700", "09992"):
+            # 港股
+            val = ak.stock_hk_valuation_baidu(
+                symbol=code, indicator="市盈率(TTM)", period="近一年"
+            )
+            pe_dict[code] = val.iloc[-1]["value"]
+        elif code == "515100":
+            # ETF 无PE
+            pe_dict[code] = np.nan
+        else:
+            # A股
+            val = ak.stock_zh_valuation_baidu(
+                symbol=code, indicator="市盈率(TTM)", period="近一年"
+            )
+            pe_dict[code] = val.iloc[-1]["value"]
+        print(f"PE {code} {stocks[code]}: {pe_dict[code]}")
+    except Exception as e:
+        pe_dict[code] = np.nan
+        print(f"PE {code} {stocks[code]}: FAILED — {e}")
+    time.sleep(1)
+
+# =========================
+# 获取 ROE (净资产收益率)
+# =========================
+# A股: stock_financial_analysis_indicator
+# 港股: stock_financial_hk_analysis_indicator_em
+# ETF: 无ROE概念, 设为NaN
+
+roe_dict = {}
+
+for code in stocks:
+    try:
+        if code in ("00700", "09992"):
+            # 港股
+            ind = ak.stock_financial_hk_analysis_indicator_em(symbol=code)
+            roe_dict[code] = ind.iloc[-1]["ROE_AVG"]
+        elif code == "515100":
+            # ETF 无ROE
+            roe_dict[code] = np.nan
+        else:
+            # A股
+            ind = ak.stock_financial_analysis_indicator(
+                symbol=code, start_year="2023"
+            )
+            roe_dict[code] = ind.iloc[-1]["净资产收益率(%)"]
+        print(f"ROE {code} {stocks[code]}: {roe_dict[code]}")
+    except Exception as e:
+        roe_dict[code] = np.nan
+        print(f"ROE {code} {stocks[code]}: FAILED — {e}")
+    time.sleep(1)
+
+print("\nPE和ROE获取完成")
+```
+
+## 第三步：多因子策略
+
+```{python}
+# =========================
+# 准备策略数据
+# =========================
+
+df = price[["ts_code", "trade_date", "name", "close_qfq"]].copy()
+df = df.rename(columns={"ts_code": "code", "trade_date": "date", "close_qfq": "close"})
+df = df.sort_values(["code", "date"]).reset_index(drop=True)
+
+# =========================
+# Step 1: 计算60日动量
+# =========================
+
+df["momentum"] = (
+    df.groupby("code")["close"]
+    .pct_change(60)
+)
+
+# =========================
+# Step 2: 计算120日均线 (用于回撤过滤)
+# =========================
+
+df["ma120"] = (
+    df.groupby("code")["close"]
+    .transform(lambda x: x.rolling(120).mean())
+)
+
+# =========================
+# Step 3: 加入PE和ROE
+# =========================
+# 注意: code格式为 "600519.SH" / "00700.HK" / "515100.SH"
+# 需用 split(".") 取交易所代码前的6位数字
+
+df["pe"] = df["code"].str.split(".").str[0].map(pe_dict)
+df["roe"] = df["code"].str.split(".").str[0].map(roe_dict)
+
+# =========================
+# Step 4: 取每月最后一个交易日 (所有股票共有的最后日期)
+# =========================
+# A股和港股交易日不完全一致, 直接取每月最后行会导致同月多调仓
+# 需找出每月所有股票共有的最后一个交易日
+
+df["month"] = df["date"].dt.to_period("M")
+
+def last_common_date(group):
+    """找出该月内拥有最多股票数据的日期 (即共有的最后交易日)。"""
+    date_counts = group.groupby("date")["code"].nunique()
+    max_count = date_counts.max()
+    common_dates = date_counts[date_counts == max_count].index
+    return common_dates[-1]
+
+month_end_dates = (
+    df.groupby("month")
+    .apply(last_common_date, include_groups=False)
+    .values
+)
+
+monthly = df[df["date"].isin(month_end_dates)].reset_index(drop=True)
+
+# =========================
+# Step 5: 120日均线过滤 — 跌破均线不参与排名
+# =========================
+
+monthly = monthly[monthly["close"] > monthly["ma120"]].reset_index(drop=True)
+
+# =========================
+# Step 6: Z-score 标准化 (每月截面)
+# =========================
+
+def zscore(x):
+    std = x.std()
+    if std == 0 or pd.isna(std):
+        return pd.Series(0, index=x.index)
+    return (x - x.mean()) / std
+
+# 用 transform 避免 groupby.apply 丢失列 (pandas 3.0)
+monthly["pe_score"] = -monthly.groupby("month")["pe"].transform(zscore)   # PE越低越好
+monthly["roe_score"] = monthly.groupby("month")["roe"].transform(zscore)   # ROE越高越好
+monthly["mom_score"] = monthly.groupby("month")["momentum"].transform(zscore)  # 动量越高越好
+
+# =========================
+# Step 7: 综合评分
+# =========================
+
+monthly["score"] = (
+      0.4 * monthly["mom_score"]
+    + 0.3 * monthly["roe_score"]
+    + 0.3 * monthly["pe_score"]
+)
+
+# =========================
+# Step 8: 每月选前5只, 等权配置
+# =========================
+
+selection_rows = []
+for date_val, group in monthly.groupby("date"):
+    top5 = group.nlargest(5, "score").copy()
+    top5["weight"] = 0.20
+    selection_rows.append(top5)
+
+selection = pd.concat(selection_rows, ignore_index=True)
+
+print("每月选股结果:")
+print(selection[["date", "code", "name", "close", "momentum", "pe", "roe", "score", "weight"]].head(20))
+
+# =========================
+# Step 9: 导出调仓表
+# =========================
+
+selection.to_csv("monthly_selection.csv", index=False, encoding="utf-8-sig")
+print(f"\n调仓表已导出: monthly_selection.csv ({len(selection)} 行)")
+```
+
+## 第四步：回测与净值曲线
+
+```{python}
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
+
+TRADING_DAYS = 252
+rf_annual = 0.02  # 无风险利率
+
+# =========================
+# 构建组合日净值
+# =========================
+
+# 每月持仓 {调仓日: {code: weight}}
+holdings = {}
+for date_val, group in selection.groupby("date"):
+    holdings[date_val] = dict(zip(group["code"], group["weight"]))
+
+# 计算每日个股收益率
+df["daily_ret"] = df.groupby("code")["close"].pct_change()
+
+# --- 无回撤控制净值 ---
+portfolio_rets = []
+portfolio_dates = []
+current_holdings = {}
+all_dates = sorted(df["date"].unique())
+
+for date_val in all_dates:
+    if date_val in holdings:
+        current_holdings = dict(holdings[date_val])
+    if not current_holdings:
+        continue
+    day_data = df[df["date"] == date_val]
+    port_ret = 0
+    total_w = 0
+    for code, weight in current_holdings.items():
+        row = day_data[day_data["code"] == code]
+        if len(row) > 0 and not pd.isna(row["daily_ret"].iloc[0]):
+            port_ret += weight * row["daily_ret"].iloc[0]
+            total_w += weight
+    if total_w > 0:
+        portfolio_rets.append(port_ret)
+        portfolio_dates.append(date_val)
+
+nav = pd.Series(portfolio_rets, index=portfolio_dates)
+nav = (1 + nav).cumprod()
+
+# --- 15%回撤控制净值 ---
+controlled_nav = []
+controlled_rets = []
+current_holdings = {}
+in_cash = False
+peak = 1.0
+
+for i, date_val in enumerate(portfolio_dates):
+    if date_val in holdings:
+        current_holdings = dict(holdings[date_val])
+        in_cash = False  # 调仓日重新建仓
+    if i == 0:
+        controlled_nav.append(1.0)
+        controlled_rets.append(0)
+        peak = 1.0
+        continue
+    if in_cash or not current_holdings:
+        controlled_nav.append(controlled_nav[-1])
+        controlled_rets.append(0)
+        continue
+    day_data = df[df["date"] == date_val]
+    port_ret = 0
+    total_w = 0
+    for code, weight in current_holdings.items():
+        row = day_data[day_data["code"] == code]
+        if len(row) > 0 and not pd.isna(row["daily_ret"].iloc[0]):
+            port_ret += weight * row["daily_ret"].iloc[0]
+            total_w += weight
+    if total_w == 0:
+        port_ret = 0
+    new_nav = controlled_nav[-1] * (1 + port_ret)
+    peak = max(peak, new_nav)
+    drawdown = (new_nav - peak) / peak
+    if drawdown < -0.15:
+        in_cash = True
+        controlled_nav.append(controlled_nav[-1])
+        controlled_rets.append(0)
+    else:
+        controlled_nav.append(new_nav)
+        controlled_rets.append(port_ret)
+
+nav_controlled = pd.Series(controlled_nav, index=portfolio_dates)
+
+# =========================
+# 沪深300基准
+# =========================
+
+hs300 = ak.stock_zh_index_daily(symbol="sh000300")
+hs300["date"] = pd.to_datetime(hs300["date"])
+hs300 = hs300.sort_values("date").reset_index(drop=True)
+hs300_filt = hs300[
+    (hs300["date"] >= portfolio_dates[0]) & (hs300["date"] <= portfolio_dates[-1])
+].copy()
+hs300_filt["ret"] = hs300_filt["close"].pct_change()
+
+# 将策略净值与沪深300对齐到共同交易日
+common_dates = sorted(
+    set(nav_controlled.index) & set(hs300_filt["date"])
+)
+
+nav_s = nav_controlled.reindex(common_dates)
+# 补齐非交易日缺口（前向填充）
+nav_s = nav_s.ffill()
+nav_s = nav_s / nav_s.iloc[0]  # 归一化
+
+nav_h = hs300_filt.set_index("date")["close"].reindex(common_dates).ffill()
+nav_h = nav_h / nav_h.iloc[0]  # 归一化
+
+# =========================
+# 绩效统计函数
+# =========================
+
+def calc_full_metrics_raw(nav_series, rf=rf_annual):
+    """返回原始数值用于表格展示。"""
+    rets = nav_series.pct_change().dropna()
+    n_days = len(rets)
+    period_years = n_days / TRADING_DAYS
+    total_ret = nav_series.iloc[-1] / nav_series.iloc[0] - 1
+    ann_ret = (1 + total_ret) ** (1 / period_years) - 1
+    ann_vol = rets.std() * np.sqrt(TRADING_DAYS)
+    peak = nav_series.expanding().max()
+    drawdown = (nav_series - peak) / peak
+    max_dd = drawdown.min()
+    rf_daily = (1 + rf) ** (1 / TRADING_DAYS) - 1
+    sharpe = (rets.mean() - rf_daily) / rets.std() * np.sqrt(TRADING_DAYS)
+    calmar = ann_ret / abs(max_dd) if max_dd != 0 else np.nan
+    return {
+        "total_ret": total_ret,
+        "ann_ret": ann_ret,
+        "ann_vol": ann_vol,
+        "max_dd": max_dd,
+        "sharpe": sharpe,
+        "calmar": calmar,
+    }
+
+m_s = calc_full_metrics_raw(nav_s)
+m_h = calc_full_metrics_raw(nav_h)
+
+print("=" * 60)
+print(f"{'指标':<16} {'VQM策略(15%DD控制)':>20} {'沪深300':>12} {'差额':>12}")
+print("=" * 60)
+print(f"{'总收益率':<16} {m_s['total_ret']:>19.1%} {m_h['total_ret']:>11.1%} "
+      f"{m_s['total_ret']-m_h['total_ret']:>+11.1%}")
+print(f"{'年化收益率':<14} {m_s['ann_ret']:>19.1%} {m_h['ann_ret']:>11.1%} "
+      f"{m_s['ann_ret']-m_h['ann_ret']:>+11.1%}")
+print(f"{'年化波动率':<14} {m_s['ann_vol']:>19.1%} {m_h['ann_vol']:>11.1%} "
+      f"{m_s['ann_vol']-m_h['ann_vol']:>+11.1%}")
+print(f"{'最大回撤':<16} {m_s['max_dd']:>19.1%} {m_h['max_dd']:>11.1%} "
+      f"{m_s['max_dd']-m_h['max_dd']:>+11.1%}")
+print(f"{'夏普比率':<16} {m_s['sharpe']:>20.2f} {m_h['sharpe']:>12.2f} "
+      f"{m_s['sharpe']-m_h['sharpe']:>+12.2f}")
+print(f"{'卡玛比率':<16} {m_s['calmar']:>20.2f} {m_h['calmar']:>12.2f} "
+      f"{m_s['calmar']-m_h['calmar']:>+12.2f}")
+print("=" * 60)
+
+# =========================
+# 计算回撤序列
+# =========================
+
+# 无回撤控制 (对齐到 portfolio_dates)
+peak_un = nav.expanding().max()
+dd_uncontrolled = (nav - peak_un) / peak_un
+
+# 15%回撤控制 (对齐到共同交易日)
+peak_co = nav_s.expanding().max()
+dd_controlled = (nav_s - peak_co) / peak_co
+
+# 沪深300
+peak_hs = nav_h.expanding().max()
+dd_hs300 = (nav_h - peak_hs) / peak_hs
+
+# =========================
+# 构建全周期持仓信号 (用于持仓状态面板)
+# =========================
+# 0 = 无持仓 (指标预热期 or 回撤控制空仓)
+# 1 = 持仓中
+
+# 重新追踪回撤控制的空仓状态 (使用展平前净值)
+in_cash_track = {}
+current_holdings_tr = {}
+in_cash_flag = False
+peak_tr = 1.0
+nav_tr = 1.0  # 展平前运行净值
+
+for i, date_val in enumerate(portfolio_dates):
+    if date_val in holdings:
+        current_holdings_tr = dict(holdings[date_val])
+        in_cash_flag = False
+
+    if i == 0:
+        in_cash_track[date_val] = False
+        peak_tr = 1.0
+        nav_tr = 1.0
+        continue
+
+    if in_cash_flag or not current_holdings_tr:
+        in_cash_track[date_val] = True
+        continue
+
+    day_data = df[df["date"] == date_val]
+    port_ret = 0
+    total_w = 0
+    for code_w, weight in current_holdings_tr.items():
+        row = day_data[day_data["code"] == code_w]
+        if len(row) > 0 and not pd.isna(row["daily_ret"].iloc[0]):
+            port_ret += weight * row["daily_ret"].iloc[0]
+            total_w += weight
+    if total_w == 0:
+        port_ret = 0
+
+    new_nav = nav_tr * (1 + port_ret)  # 展平前净值
+    peak_tr = max(peak_tr, new_nav)
+    drawdown_tr = (new_nav - peak_tr) / peak_tr
+
+    if drawdown_tr < -0.15:
+        in_cash_flag = True
+        in_cash_track[date_val] = True
+        # nav_tr 不更新 (净值持平)
+    else:
+        in_cash_track[date_val] = False
+        nav_tr = new_nav
+
+# 构建全周期信号序列
+all_trade_dates = sorted(df["date"].unique())
+first_portfolio_date = portfolio_dates[0]
+
+signal_list = []
+signal_dates_list = []
+
+for d in all_trade_dates:
+    if d < first_portfolio_date:
+        signal_list.append(0)  # 指标预热期
+        signal_dates_list.append(d)
+    elif d in in_cash_track:
+        signal_list.append(0 if in_cash_track[d] else 1)
+        signal_dates_list.append(d)
+    else:
+        signal_list.append(0)  # 非共同交易日
+        signal_dates_list.append(d)
+
+signal_s = pd.Series(signal_list, index=signal_dates_list)
+
+# 统计
+warmup_days = (signal_s.index < first_portfolio_date).sum()
+holding_days = (signal_s == 1).sum()
+cash_days = ((signal_s == 0) & (signal_s.index >= first_portfolio_date)).sum()
+print(f"指标预热期: {warmup_days}天 | 持仓: {holding_days}天 | 空仓: {cash_days}天")
+
+# 找出空仓时段
+cash_periods = []
+in_cash_start = None
+dates_sorted = sorted(in_cash_track.keys())
+for i, d in enumerate(dates_sorted):
+    if in_cash_track[d] and in_cash_start is None:
+        in_cash_start = d
+    elif not in_cash_track[d] and in_cash_start is not None:
+        cash_periods.append((in_cash_start, dates_sorted[i - 1]))
+        in_cash_start = None
+if in_cash_start is not None:
+    cash_periods.append((in_cash_start, dates_sorted[-1]))
+
+# =========================
+# 绘图: 净值曲线、持仓状态与动态回撤 (三面板)
+# =========================
+
+from matplotlib.dates import DateFormatter
+
+fig, (ax1, ax2, ax3) = plt.subplots(
+    3, 1, figsize=(14, 12),
+    gridspec_kw={"height_ratios": [3, 0.6, 2]},
+    sharex=True,
+)
+
+# --- 面板1: 净值曲线 ---
+ax1.plot(nav_s.index, nav_s.values, color="#d62728", linewidth=2.2,
+         label="VQM 15%回撤控制", zorder=3)
+ax1.plot(nav.index, nav.values, color="#ff7f0e", linewidth=1.5,
+         linestyle="--", alpha=0.7, label="VQM 无回撤控制", zorder=2)
+ax1.plot(nav_h.index, nav_h.values, color="#1f77b4", linewidth=1.8,
+         label="沪深300", zorder=2)
+
+# 标注峰值
+peak_s_idx = nav_s.idxmax()
+peak_s_val = nav_s.max()
+ax1.annotate(
+    f"峰值 {peak_s_val:.2f}x", xy=(peak_s_idx, peak_s_val),
+    xytext=(20, -25), textcoords="offset points",
+    fontsize=9, color="#d62728", fontweight="bold",
+    arrowprops=dict(arrowstyle="->", color="#d62728", lw=1.2),
+)
+
+peak_un_idx = nav.idxmax()
+peak_un_val = nav.max()
+ax1.annotate(
+    f"峰值 {peak_un_val:.2f}x", xy=(peak_un_idx, peak_un_val),
+    xytext=(20, 10), textcoords="offset points",
+    fontsize=9, color="#ff7f0e", fontweight="bold",
+    arrowprops=dict(arrowstyle="->", color="#ff7f0e", lw=1.2),
+)
+
+ax1.set_ylabel("净值 (归一化)", fontsize=12)
+ax1.set_title("图1  VQM 三因子策略 — 净值曲线、持仓状态与动态回撤", fontsize=14, fontweight="bold")
+ax1.legend(loc="upper left", fontsize=10, framealpha=0.9)
+ax1.grid(True, alpha=0.25)
+ax1.axhline(y=1.0, color="gray", linewidth=0.5, linestyle=":", alpha=0.5)
+
+# --- 面板2: 持仓状态条 ---
+holding_mask = signal_s == 1
+ax2.fill_between(signal_s.index, 0, 1, where=holding_mask,
+                 step="post", alpha=0.4, color="#2ca02c", label="持仓")
+ax2.fill_between(signal_s.index, 0, 1, where=~holding_mask,
+                 step="post", alpha=0.15, color="gray", label="空仓/预热")
+
+# 标注预热期
+ax2.annotate("指标预热期\n(MA120未就绪)",
+             xy=(signal_s.index[len(signal_s) // 6], 0.5),
+             fontsize=8, color="gray", ha="center", va="center", style="italic")
+
+# 标注较长空仓时段
+for start, end in cash_periods:
+    n_days = sum(1 for d in portfolio_dates if start <= d <= end)
+    if n_days >= 10:
+        mid = start + (end - start) / 2
+        ax2.annotate(f"空仓({n_days}天)",
+                     xy=(mid, 0.5),
+                     fontsize=7, color="#d62728", ha="center", va="center",
+                     fontweight="bold")
+
+ax2.set_ylim(-0.05, 1.1)
+ax2.set_yticks([0, 1])
+ax2.set_yticklabels(["空仓", "持仓"], fontsize=9)
+ax2.set_ylabel("持仓状态", fontsize=10)
+ax2.legend(loc="upper right", fontsize=8, framealpha=0.9)
+ax2.grid(True, alpha=0.2)
+
+# --- 面板3: 回撤曲线 ---
+ax3.fill_between(dd_controlled.index, dd_controlled.values * 100, 0,
+                 color="#d62728", alpha=0.25, label="VQM 15%回撤控制")
+ax3.plot(dd_controlled.index, dd_controlled.values * 100,
+         color="#d62728", linewidth=1.5)
+
+ax3.fill_between(dd_uncontrolled.index, dd_uncontrolled.values * 100, 0,
+                 color="#ff7f0e", alpha=0.15, label="VQM 无回撤控制")
+ax3.plot(dd_uncontrolled.index, dd_uncontrolled.values * 100,
+         color="#ff7f0e", linewidth=1, linestyle="--")
+
+ax3.fill_between(dd_hs300.index, dd_hs300.values * 100, 0,
+                 color="#1f77b4", alpha=0.15, label="沪深300")
+ax3.plot(dd_hs300.index, dd_hs300.values * 100,
+         color="#1f77b4", linewidth=1.2)
+
+# 15%风控线
+ax3.axhline(y=-15, color="black", linewidth=1, linestyle="--", alpha=0.6)
+ax3.text(dd_hs300.index[len(dd_hs300) // 2], -14.5,
+         "15% 风控线", fontsize=8, color="black", alpha=0.6,
+         ha="center", va="bottom")
+
+# 标注最大回撤点
+worst_co_idx = dd_controlled.idxmin()
+worst_co_val = dd_controlled.min()
+ax3.annotate(
+    f"最大回撤 {worst_co_val:.1%}", xy=(worst_co_idx, worst_co_val * 100),
+    xytext=(30, -15), textcoords="offset points",
+    fontsize=9, color="#d62728", fontweight="bold",
+    arrowprops=dict(arrowstyle="->", color="#d62728", lw=1.2),
+)
+
+worst_un_idx = dd_uncontrolled.idxmin()
+worst_un_val = dd_uncontrolled.min()
+ax3.annotate(
+    f"最大回撤 {worst_un_val:.1%}", xy=(worst_un_idx, worst_un_val * 100),
+    xytext=(30, 10), textcoords="offset points",
+    fontsize=9, color="#ff7f0e", fontweight="bold",
+    arrowprops=dict(arrowstyle="->", color="#ff7f0e", lw=1.2),
+)
+
+ax3.set_ylabel("回撤 (%)", fontsize=12)
+ax3.set_xlabel("日期", fontsize=12)
+ax3.legend(loc="lower left", fontsize=9, framealpha=0.9)
+ax3.grid(True, alpha=0.25)
+
+ax3.xaxis.set_major_formatter(DateFormatter("%Y-%m"))
+
+plt.tight_layout()
+plt.savefig("fig_nav_drawdown_combined.png", dpi=150, bbox_inches="tight")
+plt.show()
+```
+
+## 第五步：月度收益热力图
+
+```{python}
+# =========================
+# 从nav_controlled计算月度收益（补充2024 H2预热期0%收益）
+# =========================
+
+nav_controlled_rets = nav_controlled.pct_change().dropna()
+monthly_rets = nav_controlled_rets.resample("ME").apply(
+    lambda x: (1 + x).prod() - 1
+)
+
+# 补充2024-07~2024-12预热期（空仓，收益率为0%）
+warmup_months = pd.date_range("2024-07-31", "2024-12-31", freq="ME")
+warmup_rets = pd.Series(0.0, index=warmup_months)
+monthly_rets_full = pd.concat([warmup_rets, monthly_rets])
+
+# 构建半年×月热力图矩阵（每行6个月）
+monthly_df = pd.DataFrame({
+    "year": monthly_rets_full.index.year,
+    "month": monthly_rets_full.index.month,
+    "ret": monthly_rets_full.values,
+})
+monthly_df["half"] = monthly_df["month"].apply(lambda m: "H1" if m <= 6 else "H2")
+monthly_df["period"] = monthly_df["year"].astype(str) + monthly_df["half"]
+monthly_df["month_in_half"] = monthly_df["month"].apply(
+    lambda m: m if m <= 6 else m - 6
+)
+
+heatmap_data = monthly_df.pivot_table(
+    index="period", columns="month_in_half", values="ret", aggfunc="first"
+)
+
+month_labels = [f"{m}月" for m in range(1, 7)]
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+im = ax.imshow(
+    heatmap_data.values, cmap="RdYlGn_r", aspect="auto",
+    vmin=-0.15, vmax=0.15,
+)
+
+# 标注数值
+for i in range(heatmap_data.shape[0]):
+    for j in range(heatmap_data.shape[1]):
+        val = heatmap_data.iloc[i, j]
+        if not pd.isna(val):
+            color = "white" if abs(val) > 0.1 else "black"
+            ax.text(j, i, f"{val:.1%}", ha="center", va="center",
+                    fontsize=10, fontweight="bold", color=color)
+
+ax.set_xticks(range(6))
+ax.set_xticklabels(month_labels, fontsize=10)
+ax.set_yticks(range(len(heatmap_data.index)))
+ax.set_yticklabels(heatmap_data.index, fontsize=11)
+ax.set_title("图2  VQM策略月度收益热力图", fontsize=14, fontweight="bold")
+
+cbar = plt.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
+cbar.set_label("月度收益率", fontsize=10)
+
+plt.tight_layout()
+plt.savefig("fig3_monthly_heatmap.png", dpi=150, bbox_inches="tight")
+plt.show()
+```
+
+## 第六步：聚焦10只个股风险-收益散点图
+
+```{python}
+# =========================
+# 计算每只股票的个股指标
+# =========================
+
+stock_records = []
+for code in df["code"].unique():
+    sub = df[df["code"] == code].sort_values("date").copy()
+    sub["ret"] = sub["close"].pct_change()
+    n_days = len(sub)
+    period_years = n_days / TRADING_DAYS
+    total_ret = sub["close"].iloc[-1] / sub["close"].iloc[0] - 1
+    ann_vol = sub["ret"].std() * np.sqrt(TRADING_DAYS)
+    peak = sub["close"].expanding().max()
+    max_dd = ((sub["close"] - peak) / peak).min()
+    rf_daily = (1 + rf_annual) ** (1 / TRADING_DAYS) - 1
+    sharpe = (sub["ret"].mean() - rf_daily) / sub["ret"].std() * np.sqrt(TRADING_DAYS)
+    selected = selection[selection["code"] == code].shape[0]
+    name = sub["name"].iloc[0]
+    stock_records.append({
+        "code": code, "name": name,
+        "total_ret": total_ret, "max_dd": max_dd,
+        "sharpe": sharpe, "selected": selected,
+        "pure_code": code.split(".")[0],
+    })
+
+stock_df = pd.DataFrame(stock_records)
+
+# =========================
+# 攻防风格分类
+# =========================
+
+# 计算Beta (相对于沪深300)
+hs300_ret = hs300_filt.set_index("date")["ret"].dropna()
+
+od_records = []
+for code in df["code"].unique():
+    sub = df[df["code"] == code].sort_values("date").copy()
+    sub["ret"] = sub["close"].pct_change()
+    sub = sub.set_index("date")
+
+    # 对齐到沪深300交易日
+    aligned = sub[["ret"]].join(hs300_ret, how="inner", rsuffix="_hs")
+    aligned = aligned.dropna()
+
+    n_days = len(sub)
+    period_years = n_days / TRADING_DAYS
+    total_ret = sub["close"].iloc[-1] / sub["close"].iloc[0] - 1
+    ann_vol = sub["ret"].std() * np.sqrt(TRADING_DAYS)
+    peak = sub["close"].expanding().max()
+    max_dd = ((sub["close"] - peak) / peak).min()
+    rf_daily = (1 + rf_annual) ** (1 / TRADING_DAYS) - 1
+    sharpe = (sub["ret"].mean() - rf_daily) / sub["ret"].std() * np.sqrt(TRADING_DAYS)
+    avg_mom = sub["close"].pct_change(60).mean()
+    beta = aligned["ret"].cov(aligned["ret_hs"]) / aligned["ret_hs"].var()
+    selected = selection[selection["code"] == code].shape[0]
+    name = sub["name"].iloc[0]
+
+    # 分类: 年化波动率>35% 或 Beta>1.2 → 进攻; <25% 或 Beta<0.8 → 防守; 其余 → 平衡
+    if ann_vol > 0.35 or beta > 1.2:
+        style = "进攻"
+    elif ann_vol < 0.25 or beta < 0.8:
+        style = "防守"
+    else:
+        style = "平衡"
+
+    sector_map = {
+        "600519": "消费", "09992": "消费", "000333": "消费", "600887": "消费",
+        "00700": "互联网", "515100": "ETF",
+        "600085": "医药", "002287": "医药", "600276": "医药", "688235": "医药",
+        "600436": "医药", "600329": "医药", "000538": "医药", "002422": "医药",
+        "603986": "半导体", "001309": "半导体", "301308": "半导体",
+        "688525": "半导体", "688008": "半导体", "688766": "半导体",
+    }
+    pure = code.split(".")[0]
+    sector = sector_map.get(pure, "其他")
+
+    od_records.append({
+        "code": code, "name": name, "sector": sector,
+        "ann_vol": ann_vol, "total_ret": total_ret, "max_dd": max_dd,
+        "sharpe": sharpe, "avg_mom": avg_mom, "beta": beta,
+        "selected": selected, "style": style,
+    })
+
+od_df = pd.DataFrame(od_records)
+
+# =========================
+# 聚焦10只: 按选中次数排序取前10
+# =========================
+
+focus_10 = stock_df.nlargest(10, "selected").copy()
+focus_codes = focus_10["code"].tolist()
+focus_od = od_df[od_df["code"].isin(focus_codes)].copy()
+
+# =========================
+# 风险-收益散点图
+# =========================
+
+style_colors = {"进攻": "#d62728", "平衡": "#ff7f0e", "防守": "#1f77b4"}
+
+fig, ax = plt.subplots(figsize=(12, 8))
+
+for _, row in focus_od.iterrows():
+    color = style_colors[row["style"]]
+    size = 80 + row["selected"] * 25
+    ax.scatter(row["ann_vol"] * 100, row["total_ret"] * 100,
+               s=size, c=color, alpha=0.7, edgecolors="white", linewidth=1.5,
+               zorder=3)
+    # 标注: 名称(选中次数)
+    label = f'{row["name"]}({int(row["selected"])}次)'
+    ax.annotate(label, xy=(row["ann_vol"] * 100, row["total_ret"] * 100),
+                xytext=(7, 5), textcoords="offset points",
+                fontsize=9, fontweight="bold", color=color)
+
+# 风格图例
+for style, color in style_colors.items():
+    ax.scatter([], [], s=100, c=color, alpha=0.7, edgecolors="white",
+               linewidth=1.5, label=style)
+
+ax.set_xlabel("年化波动率 (%)", fontsize=12)
+ax.set_ylabel("区间收益率 (%)", fontsize=12)
+ax.set_title("图3  聚焦10只个股 — 风险-收益散点图", fontsize=14, fontweight="bold")
+ax.legend(title="风格", fontsize=10, title_fontsize=11, loc="upper left")
+ax.grid(True, alpha=0.25)
+ax.axhline(y=0, color="gray", linewidth=0.5, linestyle=":", alpha=0.5)
+
+plt.tight_layout()
+plt.savefig("fig_focus10_risk_return.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# =========================
+# 聚焦10只个股表现表
+# =========================
+
+print("\n聚焦10只个股表现:")
+print("=" * 90)
+print(f"{'代码':<12} {'名称':<8} {'行业':<6} {'区间收益':>10} {'最大回撤':>10} "
+      f"{'夏普':>8} {'选中次数':>8}")
+print("-" * 90)
+for _, row in focus_od.sort_values("selected", ascending=False).iterrows():
+    print(f"{row['code']:<12} {row['name']:<8} {row['sector']:<6} "
+          f"{row['total_ret']:>9.1%} {row['max_dd']:>10.1%} "
+          f"{row['sharpe']:>8.2f} {int(row['selected']):>8}")
+print("=" * 90)
+```
+
+## 第七步：贡献度分析与攻防风格分析
+
+```{python}
+# =========================
+# 个股贡献度分析
+# =========================
+
+contrib_records = []
+for code in df["code"].unique():
+    sub = df[df["code"] == code].sort_values("date").copy()
+    sub["ret"] = sub["close"].pct_change()
+    sub = sub.set_index("date")
+
+    # 计算该股票在持仓期间的贡献
+    holding_days = 0
+    contribution = 0.0
+    current_holdings_track = {}
+    for date_val in portfolio_dates:
+        if date_val in holdings and code in holdings[date_val]:
+            current_holdings_track = {code: holdings[date_val][code]}
+        if code in current_holdings_track and date_val in sub.index:
+            ret = sub.loc[date_val, "ret"]
+            if not pd.isna(ret):
+                weight = current_holdings_track[code]
+                contribution += weight * ret
+                holding_days += 1
+
+    name = df[df["code"] == code]["name"].iloc[0]
+    contrib_records.append(
+        {
+            "code": code,
+            "name": name,
+            "contribution": contribution,
+            "holding_days": holding_days,
+            "pure_code": code.split(".")[0],
+        }
+    )
+
+contrib_df = pd.DataFrame(contrib_records).sort_values("contribution", ascending=False)
+
+print("\n个股贡献度排名:")
+print("=" * 55)
+print(f"{'代码':<12} {'名称':<8} {'贡献度':>10} {'持仓天数':>8}")
+print("-" * 55)
+for _, row in contrib_df.iterrows():
+    print(
+        f"{row['code']:<12} {row['name']:<8} {row['contribution']:>+10.4f} "
+        f"{int(row['holding_days']):>8}"
+    )
+print("=" * 55)
+
+# =========================
+# 个股贡献度条形图
+# =========================
+
+from matplotlib.patches import Patch
+
+sector_map_bar = {
+    "600519": "消费",
+    "09992": "消费",
+    "000333": "消费",
+    "600887": "消费",
+    "00700": "互联网",
+    "515100": "ETF",
+    "600085": "医药",
+    "002287": "医药",
+    "600276": "医药",
+    "688235": "医药",
+    "600436": "医药",
+    "600329": "医药",
+    "000538": "医药",
+    "002422": "医药",
+    "603986": "半导体",
+    "001309": "半导体",
+    "301308": "半导体",
+    "688525": "半导体",
+    "688008": "半导体",
+    "688766": "半导体",
+}
+
+sector_colors_bar = {
+    "半导体": "#d62728",
+    "消费": "#1f77b4",
+    "互联网": "#ff7f0e",
+    "医药": "#2ca02c",
+    "ETF": "#9467bd",
+}
+
+plot_contrib = contrib_df.sort_values("contribution", ascending=True).copy()
+colors_bar = [
+    "#d62728" if v >= 0 else "#2ca02c"
+    for v in plot_contrib["contribution"].values
+]
+
+fig, ax = plt.subplots(figsize=(12, 10))
+
+ax.barh(
+    range(len(plot_contrib)),
+    plot_contrib["contribution"].values,
+    color=colors_bar,
+    alpha=0.85,
+    edgecolor="white",
+    linewidth=0.5,
+)
+
+# Y轴标签: 名称 (行业)
+ylabels = []
+for _, row in plot_contrib.iterrows():
+    sector = sector_map_bar.get(row["pure_code"], "其他")
+    ylabels.append(f"{row['name']} ({sector})")
+ax.set_yticks(range(len(plot_contrib)))
+ax.set_yticklabels(ylabels, fontsize=10)
+
+# 在柱子末端标注贡献度数值
+for i, (_, row) in enumerate(plot_contrib.iterrows()):
+    val = row["contribution"]
+    offset = 0.005 if val >= 0 else -0.005
+    ha = "left" if val >= 0 else "right"
+    ax.text(
+        val + offset,
+        i,
+        f"{val:+.3f}",
+        va="center",
+        ha=ha,
+        fontsize=9,
+        fontweight="bold",
+    )
+
+ax.axvline(x=0, color="black", linewidth=0.8)
+ax.set_xlabel("个股贡献度", fontsize=12)
+ax.set_title(
+    "图4  个股贡献度排名（持仓期间加权收益率累计）", fontsize=14, fontweight="bold"
+)
+ax.grid(True, axis="x", alpha=0.2)
+
+# 涨跌图例
+legend_elements = [
+    Patch(facecolor="#d62728", alpha=0.85, label="正贡献"),
+    Patch(facecolor="#2ca02c", alpha=0.85, label="负贡献"),
+]
+ax.legend(
+    handles=legend_elements,
+    title="方向",
+    fontsize=9,
+    title_fontsize=10,
+    loc="lower right",
+)
+
+plt.tight_layout()
+plt.savefig("fig_contrib_bar.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# =========================
+# 攻防风格分组统计
+# =========================
+
+print("\n攻防风格分组统计:")
+print("=" * 80)
+style_stats = (
+    od_df.groupby("style")
+    .agg(
+        数量=("code", "count"),
+        平均波动率=("ann_vol", "mean"),
+        平均收益率=("total_ret", "mean"),
+        平均最大回撤=("max_dd", "mean"),
+        平均夏普=("sharpe", "mean"),
+        平均Beta=("beta", "mean"),
+    )
+    .round(4)
+)
+print(style_stats.to_string())
+print("=" * 80)
+
+# =========================
+# 季度攻防切换
+# =========================
+
+# 为selection添加风格和季度
+style_map = dict(zip(od_df["code"], od_df["style"]))
+selection = selection.copy()
+selection["style"] = selection["code"].map(style_map)
+selection["quarter"] = selection["date"].dt.to_period("Q")
+
+qt = selection.groupby(["quarter", "style"]).size().unstack(fill_value=0)
+
+print("\n季度持仓风格分布:")
+print("=" * 45)
+print(qt.to_string())
+print("=" * 45)
+
+# =========================
+# 市场环境分析
+# =========================
+
+# 按季度划分市场状态 (基于沪深300涨跌)
+quarterly_hs300 = hs300_filt.copy()
+quarterly_hs300["quarter"] = quarterly_hs300["date"].dt.to_period("Q")
+q_returns = quarterly_hs300.groupby("quarter")["close"].agg(
+    lambda x: x.iloc[-1] / x.iloc[0] - 1
+)
+
+market_results = []
+for q, r in q_returns.items():
+    if r > 0.10:
+        state = "上涨市"
+    elif r < -0.05:
+        state = "下跌市"
+    else:
+        state = "震荡市"
+
+    # 策略同期收益
+    q_dates = [d for d in portfolio_dates if pd.Period(d, freq="Q") == q]
+    if len(q_dates) > 1:
+        s_ret = nav_controlled.loc[q_dates[-1]] / nav_controlled.loc[q_dates[0]] - 1
+    else:
+        s_ret = 0.0
+
+    market_results.append(
+        {
+            "period": str(q),
+            "state": state,
+            "strat_ret": s_ret,
+            "bench_ret": r,
+            "beat": "是" if s_ret > r else "否",
+        }
+    )
+
+print("\n市场环境表现:")
+print("=" * 55)
+print(f"{'季度':<12} {'市场状态':<8} {'策略收益':>10} {'沪深300':>10} {'跑赢':>6}")
+print("-" * 55)
+for mr in market_results:
+    print(
+        f"{mr['period']:<12} {mr['state']:<8} {mr['strat_ret']:>9.1%} "
+        f"{mr['bench_ret']:>9.1%} {mr['beat']:>6}"
+    )
+print("=" * 55)
+```
