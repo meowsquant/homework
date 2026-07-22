@@ -16,15 +16,13 @@ title: "量化交易入门 — 作业"
 | [Task 6](task6.html) | 夏普比率 | 夏普比率与 Beta 计算、10 只标的的风险收益排名 |
 | [Task 7](task7.html) | 最大回撤与仓位管理 | 水下曲线、仓位对比、最大回撤恢复时间分析 |
 
+---
+
 ## 运行环境
 
 - Python 3.x
 - Quarto(用于渲染 `.qmd` 文档)
 - 主要依赖:`numpy`、`pandas`、`matplotlib`、`akshare`
-
-## 源代码
-
-完整源代码托管于 [GitHub](https://github.com/meowsquant/homework)。
 
 ---
 
@@ -42,3 +40,7 @@ title: "量化交易入门 — 作业"
 **关键结论**：策略总收益 +210.8%，超额 +186.7%，最大回撤 -14.7%，夏普 3.24，三项成功标准全部达标。
 
 > 本量化数据报告不构成投资建议，仅个人间讨论，切勿模仿。本报告已获得版权保护，属于创作者和程翊博所有，切勿盗用商用，违者必究，需负相应的法律责任。
+
+## 源代码
+
+完整源代码托管于 [GitHub](https://github.com/meowsquant/homework)。
