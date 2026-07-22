@@ -10,14 +10,10 @@ project:
     - task6.qmd
     - task7.qmd
     - index.qmd
-    - "team report/小组报告.qmd"
   resources:
     - "*.png"
     - "*.jpg"
     - "downloads/"
-    - "team report/小组报告.docx"
-    - "team report/poster/poster.pdf"
-    - "team report/attachments.zip"
 
 execute:
   freeze: auto
@@ -54,8 +50,6 @@ website:
             href: task6.html
           - text: "Task 7 — 最大回撤与仓位管理"
             href: task7.html
-          - text: "delta0 小组报告"
-            href: "team report/小组报告.html"
 
   page-footer:
     left: |
