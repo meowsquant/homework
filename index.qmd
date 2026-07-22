@@ -17,7 +17,6 @@ title: "量化交易入门"
 | [Task 7](task7.html) | 最大回撤与仓位管理 | 水下曲线、仓位对比、最大回撤恢复时间分析 |
 
 ---
-## 实战项目
 
 ### delta0 小组量化策略
 
@@ -27,8 +26,10 @@ title: "量化交易入门"
 | --- | --- | --- |
 | 在线报告 | 完整研究报告（HTML 页面） | [查看报告](team report/小组报告.html) |
 | 策略报告 | Word 版本下载 | [小组报告.docx](team report/小组报告.docx) |
-| 策略海报 | A4 一页式数据海报（PDF） | [策略海报.pdf](team report/poster/poster.pdf) |
+| 策略海报 | A4 一页式数据海报（PDF） | [策略海报.pdf](team report/poster.pdf) |
 | 策略附件 | 原始数据 CSV 压缩包（ZIP） | [策略附件.zip](team report/attachments.zip) |
+
+注：本量化数据报告不构成投资建议，仅个人学习交流讨论使用，切勿模仿。本项目不允许任何形式的商用，否则必追求法律责任。
 
 ## 运行环境
 

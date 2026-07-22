@@ -16,7 +16,7 @@ project:
     - "*.jpg"
     - "downloads/"
     - "team report/小组报告.docx"
-    - "team report/poster/poster.pdf"
+    - "team report/poster.pdf"
     - "team report/attachments.zip"
 
 execute:
